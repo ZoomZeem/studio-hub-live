@@ -1393,7 +1393,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     decide: function (sid, choice) { return http("POST", "/api/suggestions/" + sid, { choice: choice }); },
     replays: function () { return http("GET", "/api/replay"); },
     replay: function (id) { return http("GET", "/api/replay/" + encodeURIComponent(id)); },
-    record: function (id) { return http("GET", "/api/items/" + encodeURIComponent(id) + "/record"); }
+    record: function (id) { return http("GET", "/api/items/" + encodeURIComponent(id) + "/record"); },
+    launch: function (id) { return http("POST", "/api/launch/" + encodeURIComponent(id), {}); }
   };
 
   api.dashboard = STATIC ? function () { return Promise.resolve(staticDashView()); } : function () { return http("GET", "/api/dashboard"); };
@@ -1810,13 +1811,24 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       '<h2 class="h3">To find out first</h2><ul class="plain">' + c.questions.map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ul>" +
       (item.decision ? '<div class="ask">' + decisionBlock(item) + "</div>" : "") +
       '<p class="again"><a class="btn" href="#today" data-again="1">Check another idea</a></p>' +
-      (K ? keepArea(item) :
+      (state.launch && c.score !== null ? launchBlock(item) : K ? keepArea(item) :
       '<div class="stub"><button type="button" class="btn" id="build-stub" disabled aria-disabled="true" aria-describedby="build-note">Build the first slice</button>' +
       '<p class="muted small" id="build-note">Not switched on yet. It does nothing: it takes no email, keeps nothing and sends nothing, until the owner approves how a sign-up would be kept and the privacy wording.</p></div>') +
       (mine ? '<div class="done" role="status"><span class="big-tick" aria-hidden="true">✓</span><div><b>Recorded: ' + esc(mine.text) + ".</b>" +
         '<p class="muted small">Nothing was run. In a real studio the Research agent would start the free test next, and you would see it here.</p>' +
         '<a class="btn link" href="#today">Back to home</a></div></div>' : "") +
       "</article>";
+  }
+
+  // "Launch it" exists only when the local server runs with --launch (state.launch); the offline file never has it.
+  function launchBlock(item) {
+    var page = state.launch.pages && state.launch.pages[item.id];
+    var note = state.launch.note ? '<p class="muted small">' + esc(state.launch.note) + "</p>" : "";
+    var never = "It asks for nothing, keeps nothing and sends nothing.";
+    if (page) return '<div class="launch" role="status"><p><b>Your page is live on this computer.</b> ' + never + "</p>" +
+      '<a class="btn" id="launch-open" href="' + esc(page.url) + '" rel="noopener">Open your page</a>' + note + "</div>";
+    return '<div class="launch"><button type="button" class="btn" data-launch="' + esc(item.id) + '">Launch it</button>' +
+      '<p class="muted small">Builds a one-page test site from this check and puts it live on this computer. ' + never + "</p>" + note + "</div>";
   }
 
   // The answer is on screen at once (the checks are done before the screen draws). Below it, the steps play back as
@@ -2523,6 +2535,21 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       var approve = b.dataset.choice === "approve";
       api.approve(b.dataset.appr, b.dataset.choice, b.dataset.digest, b.dataset.confirmed === "1").then(function (res) {
         report(res, approve ? "Approved. Recorded only; nothing was run." : "Declined. Recorded only; nothing was run.");
+      });
+    } else if (b.dataset.launch && api.launch) {
+      b.disabled = true;
+      b.textContent = "Launching…";
+      api.launch(b.dataset.launch).then(function (res) {
+        if (res.status !== "LIVE" && res.status !== "SAME") {
+          b.disabled = false;
+          b.textContent = "Launch it";
+          return toast("Not done: " + (res.say || res.why || "the page was not put live."));
+        }
+        return api.state().then(function (st) {
+          if (st && st.items) state = st;
+          render();
+          if ($("#launch-open")) $("#launch-open").focus();
+        });
       });
     } else if (b.dataset.stop) {
       openStop(b.dataset.stop);
