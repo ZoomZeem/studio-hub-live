@@ -537,6 +537,15 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 .receipt-open > summary { cursor: pointer; color: var(--muted); font-size: var(--t13); min-block-size: 24px; }
 .receipt-drawer { margin-block-start: var(--s4); }
 
+/* I2: the echo (what was checked, with one tap to fix it), the plan before the steps play, and the replay's own stop. */
+.echo-fix { margin-block: 0 var(--s4); }
+.plan-preview { margin-block: var(--s3) var(--s4); padding-block: var(--s3); padding-inline: var(--s4); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--surface); }
+.plan-title { margin-block: 0 var(--s2); font-size: var(--t15); }
+.plan-steps { margin: 0; padding-inline-start: var(--s5); display: grid; gap: var(--s1); font-size: var(--t15); }
+.plan-cost { margin-block: var(--s3) 0; color: var(--muted); font-size: var(--t13); }
+.plan-cost b { color: var(--text); }
+.plan-go { margin-block: var(--s3) 0; }
 
 </style>
 </head>
@@ -778,6 +787,19 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   var GAPS = { harness: "The harness feed did not answer. Nothing below is guessed.",
                dashboard: "The activity source did not answer. Nothing below is guessed." };
   var RECEIPT = /^(R|H)-[0-9]+$/;
+  // The plan a run shows before its steps play (I2). Fixed wording, one entry per kind of step a run takes; planOf lists
+  // a step only when the run has a step of that kind, so the plan always summarises the run's own record.
+  var PLAN_STEPS = {
+    open: "Open a card for your idea and hand it to the Research agent.",
+    check: "Check it against the studio's own bank: its area, the tools that already exist, and its weakest assumption.",
+    review: "Have a different agent check that work. Nobody checks their own.",
+    ask: "Ask you one question, if the next step is yours to decide."
+  };
+  var PLAN_KIND = { created: "open", offer: "open", accept: "open", checkpoint: "check", check: "check",
+                    submit: "review", verdict: "review", owner_decision_request: "ask" };
+  // What a run costs, said before it runs. Only "free" exists: nothing paid runs anywhere yet. A paid cost would need a
+  // cost source and a cap first (docs/design/DYNAMIC-PRESENCE.md, cost rules).
+  var PLAN_COSTS = { free: ["Free.", "No AI model and no paid service runs."] };
   var FEED_FACTS = 20, FEED_SHOWN = 8, LINE_TEXT = 300;
 
   /* The catalog. `acts` says whether the block offers an action; the primary must be one of them, and no acting block
@@ -813,6 +835,13 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       description: "One receipt held open: where a line came from, when, who or what produced it, and what it rests on.",
       slots: ["main"], acts: false,
       props: { receipt: { type: "facts", min: 1, max: 1, required: true, prefix: "line." } } },
+    plan_preview: {
+      description: "What a run will do, in 3 to 5 plain steps, and what it costs, shown before it runs. With go, nothing runs until the person taps Go.",
+      slots: ["main"], acts: "when go is true",
+      props: { steps: { type: "enums", values: Object.keys(PLAN_STEPS), min: 3, max: 5, required: true },
+               cost: { type: "enum", values: Object.keys(PLAN_COSTS), required: true },
+               go: { type: "bool", required: true },
+               primary: { type: "bool" } } },
     empty_state: {
       description: "What happens next when nothing needs the person.",
       slots: ["main"], acts: true,
@@ -833,7 +862,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   }
   function acts(block) {
     var c = CATALOG[block.component];
-    return c.acts === true || (c.acts === "when action is review" && block.props.action === "review");
+    return c.acts === true || (c.acts === "when action is review" && block.props.action === "review") ||
+      (c.acts === "when go is true" && block.props.go === true);
   }
   function ordered(blocks) {
     return SLOTS.reduce(function (out, s) { return out.concat(blocks.filter(function (b) { return b.slot === s; })); }, []);
@@ -851,7 +881,9 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       return null;
     }
     if (spec.type === "enums") {
-      if (!Array.isArray(v) || v.length > spec.max) return "not a short list";
+      if (!Array.isArray(v) || v.length > spec.max) return "not a list of at most " + spec.max;
+      if (v.length < (spec.min || 0)) return "fewer than " + spec.min + " items";
+      if (v.some(function (x, i) { return v.indexOf(x) !== i; })) return "an item is listed twice";
       return v.every(function (x) { return spec.values.indexOf(x) >= 0; }) ? null : "not one of " + spec.values.join(", ");
     }
     if (spec.type === "facts") {
@@ -873,6 +905,26 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return (text.match(/[0-9]+/g) || []).filter(function (n) { return !new RegExp("(^|[^0-9])" + n + "([^0-9]|$)").test(cited); });
   }
 
+  /** A block's props against its catalog entry: known props only, each passing its schema, no number literal, and no
+   *  number in its text that a cited fact does not hold. */
+  function propErrors(c, props, facts, at) {
+    var errs = [];
+    if (!isObj(props)) return [at + ": props is not an object"];
+    if (hasNumber(props)) errs.push(at + ": a number literal in props (numbers are FactPack references)");
+    Object.keys(props).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(c.props, k)) errs.push(at + ": unknown prop " + k); });
+    Object.keys(c.props).forEach(function (k) {
+      var v = props[k];
+      if (v === undefined) { if (c.props[k].required) errs.push(at + ": missing prop " + k); return; }
+      var e = checkProp(c.props[k], v, facts);
+      if (e) errs.push(at + "." + k + ": " + e);
+    });
+    if (typeof props.text === "string") {
+      var u = untraced(props.text, props.facts, facts);
+      if (u.length) errs.push(at + ": untraced number " + u.join(", "));
+    }
+    return errs;
+  }
+
   /** Validate a layout plan against the catalog and a FactPack. Returns {ok, errors}; any error rejects the whole plan. */
   function validate(plan, pack) {
     var facts = (pack && pack.facts) || {};
@@ -890,20 +942,9 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       var c = Object.prototype.hasOwnProperty.call(CATALOG, b.component) ? CATALOG[b.component] : null;
       if (!c) { errs.push(at + ": unknown component " + String(b.component)); return; }
       if (c.slots.indexOf(b.slot) < 0) errs.push(at + ": " + b.component + " cannot sit in slot " + String(b.slot));
-      if (!isObj(b.props)) { errs.push(at + ": props is not an object"); return; }
-      if (hasNumber(b.props)) errs.push(at + ": a number literal in props (numbers are FactPack references)");
-      Object.keys(b.props).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(c.props, k)) errs.push(at + ": unknown prop " + k); });
-      Object.keys(c.props).forEach(function (k) {
-        var v = b.props[k];
-        if (v === undefined) { if (c.props[k].required) errs.push(at + ": missing prop " + k); return; }
-        var e = checkProp(c.props[k], v, facts);
-        if (e) errs.push(at + "." + k + ": " + e);
-      });
-      if (typeof b.props.text === "string") {
-        var u = untraced(b.props.text, b.props.facts, facts);
-        if (u.length) errs.push(at + ": untraced number " + u.join(", "));
-      }
-      good.push(b);
+      var e = propErrors(c, b.props, facts, at);
+      errs.push.apply(errs, e);
+      if (isObj(b.props)) good.push(b);
     });
     if (good.filter(function (b) { return b.slot === "top"; }).length > 1) errs.push("more than one block in the top slot");
     var primaries = good.filter(function (b) { return b.props.primary === true; });
@@ -1044,6 +1085,14 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       var l = p.receipt[0];
       return '<section class="receipt-drawer" aria-label="Receipt ' + esc(l.receipt) + '"><div class="receipt">' + lineReceipt(l.value, l.receipt) + "</div></section>";
     },
+    plan_preview: function (p) {
+      var cost = PLAN_COSTS[p.cost];
+      return '<section class="plan-preview" aria-labelledby="plan-title"><h3 class="plan-title" id="plan-title">The plan</h3>' +
+        '<ol class="plan-steps">' + p.steps.map(function (k) { return "<li>" + esc(PLAN_STEPS[k]) + "</li>"; }).join("") + "</ol>" +
+        '<p class="plan-cost"><b class="mono">' + esc(cost[0]) + "</b> " + esc(cost[1]) + "</p>" +
+        (p.go ? '<p class="plan-go"><button type="button" class="btn' + (p.primary ? " primary" : "") + '" data-plan-go="1">Go</button></p>' : "") +
+        "</section>";
+    },
     empty_state: function () {
       return '<div class="empty"><p class="empty-mark" aria-hidden="true">✓</p><p class="empty-head">All clear.</p>' +
         "<p>Nothing needs you right now. The agents carry on, and the referee will flag anything only you can decide.</p>" +
@@ -1058,6 +1107,33 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       out[k] = Array.isArray(v) ? v.map(function (x) { return isRef(x) ? { id: x.$fact, value: pack.facts[x.$fact].value, receipt: pack.facts[x.$fact].receipt } : x; }) : v;
     });
     return out;
+  }
+
+  /** The plan for a run, from the run's own steps (each an audit entry's `event`, or "check" for a real check line), in
+   *  the order they first happen. Step kinds the plan has no words for are left out; they still show in the steps. */
+  function planOf(events) {
+    var out = [];
+    (events || []).forEach(function (e) {
+      var k = Object.prototype.hasOwnProperty.call(PLAN_KIND, e) ? PLAN_KIND[e] : null;
+      if (k && out.indexOf(k) < 0) out.push(k);
+    });
+    return out;
+  }
+
+  /** One catalog block outside a page layout (the run page's plan): it passes the same schema, or nothing is drawn.
+   *  Returns {ok, errors, html}. */
+  function block(name, props, pack, components) {
+    var c = Object.prototype.hasOwnProperty.call(CATALOG, name) ? CATALOG[name] : null;
+    var errs = c ? propErrors(c, props, (pack && pack.facts) || {}, name) : ["unknown component " + String(name)];
+    var draw = (components && components[name]) || DEFAULTS[name];
+    if (!errs.length && !draw) errs.push("no renderer for " + name);
+    if (errs.length) {
+      // Nothing is drawn, and the refusal is in the render log like every other render, so a missing block is never silent.
+      LOG.push({ source: "block", component: String(name), rejected: true, errors: errs.slice(0, 20) });
+      if (LOG.length > 50) LOG.shift();
+      return { ok: false, errors: errs, html: "" };
+    }
+    return { ok: true, errors: [], html: '<div class="pblock" data-component="' + esc(name) + '">' + draw(resolve(props, pack || { facts: {} }), pack) + "</div>" };
   }
 
   var LOG = [];
@@ -1105,7 +1181,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
         var s = c.props[k];
         props[k] = s.type === "bool" ? { type: "boolean" } : s.type === "enum" ? { enum: s.values } :
           s.type === "text" ? { type: "string", maxLength: s.max, pattern: "^[^<>]*$" } :
-          s.type === "enums" ? { type: "array", maxItems: s.max, items: { enum: s.values } } : { type: "array", maxItems: s.max, items: ref };
+          s.type === "enums" ? { type: "array", maxItems: s.max, uniqueItems: true, items: { enum: s.values } } : { type: "array", maxItems: s.max, items: ref };
         if (s.min) props[k].minItems = s.min;
         if (s.required) req.push(k);
       });
@@ -1150,7 +1226,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   }
 
   var api = { receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
-              templatePlan: templatePlan, render: render, tools: tools, canonical: canonical, sha256: sha256,
+              templatePlan: templatePlan, render: render, block: block, planOf: planOf, PLAN_STEPS: PLAN_STEPS,
+              tools: tools, canonical: canonical, sha256: sha256,
               log: function () { return LOG.slice(); } };
   root.HubPresence = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -1335,6 +1412,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   var staticChoiceUsed = false;
   var staticPrefix = "";          // "start>" once the offline first run has happened
   var runShown = {};              // idea id -> narration lines already revealed
+  var runStopped = {};            // idea id -> true once the person stopped its replay
+  var wantText = "";              // "Fix the wording": the sentence to put back in Home's box
   var state = null;
   var ownerToken = "";            // set only when the app was started with an owner key; read once from the printed link
   (function () {
@@ -1840,7 +1919,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     if (shown === undefined) shown = total;      // only a run you just started plays; coming back shows it all
     function paint() {
       lines.forEach(function (li, i) { li.hidden = i >= shown; });
-      $("#run-status").textContent = shown >= total ? "All " + total + " steps shown." : "Playing back the steps…";
+      $("#run-status").textContent = shown < total ? "Playing back the steps…" :
+        (runStopped[id] ? "Replay stopped. All " + total + " steps are shown." : "All " + total + " steps shown.");
       $("#run-status").parentNode.classList.toggle("busy", shown < total);
       $("#skip-replay").hidden = shown >= total;
     }
@@ -1887,8 +1967,11 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       if (!item || !item.check) return '<p>That idea was not found. <a href="#today">Back to home</a>.</p>';
       var lines = runLines(id);
       // Answer first (consumer UX gate item 2): the verdict card, then what it rests on, then the steps as the receipt.
+      // Echo (I2): the sentence the studio checked, with one tap back to Home to fix the wording. The check is done before
+      // this page draws (answer first), so it says "Checked", never "Checking".
       return '<p><a class="btn link" href="#today">← Home</a></p>' +
-        '<p class="eyebrow">New idea</p><h1>' + esc(item.title) + "</h1>" +
+        '<p class="eyebrow">Checked</p><h1>' + esc(item.title) + "</h1>" +
+        '<p class="echo-fix"><a class="btn link" href="#today" data-fix="' + esc(item.id) + '">Fix the wording</a></p>' +
         checkCard(item) +
         // This page is the idea's details page, so Stop lives here (it left the Home card), right under the answer, and
         // a stop shows here too, before the steps.
@@ -1897,8 +1980,11 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
         stopRow(item) +
         '<p class="muted small demo-note">The checks above are real: they ran on your sentence against a small list the studio keeps, with competitor pages fetched on the date shown. Ratings are the studio’s opinion, not market data. The steps below are a script played through the real referee: the agents are stand-ins and no AI model ran.</p>' +
         '<h2 class="h3" id="how-title" tabindex="-1">How it was checked</h2>' +
+        // The plan shows before the steps play: 3 to 5 plain steps from this run's own record, and what it cost.
+        P.block("plan_preview", { steps: P.planOf(lines.map(function (a) { return a.real ? "check" : a.event; })), cost: "free", go: false }).html +
         '<div class="status-line"><span class="pulse" aria-hidden="true"></span><span id="run-status" aria-live="polite"></span>' +
-        '<button type="button" class="btn link" id="skip-replay" hidden>Show all steps</button></div>' +
+        // Visible the whole time the replay plays, and apart from "Stop this idea" (permanent, with a reason).
+        '<button type="button" class="btn link" id="skip-replay" hidden>Stop the replay</button></div>' +
         '<ul class="team" aria-label="Working on it">' + item.team.map(function (m) {
           return '<li><span class="avatar" aria-hidden="true">' + esc(initials(m.name)) + "</span><span><b>" + esc(m.name) + '</b><br><span class="muted small">' + esc(m.role) + "</span></span></li>";
         }).join("") + "</ul>" +
@@ -2494,6 +2580,12 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   var wantStart = false;
   document.addEventListener("click", function (ev) {
     if (ev.target.closest("[data-again]")) { wantStart = true; return; }
+    var fix = ev.target.closest("[data-fix]");
+    if (fix) {
+      var it = state.items.filter(function (v) { return v.id === fix.dataset.fix; })[0];
+      wantText = it ? it.title : ""; wantStart = true;
+      return;
+    }
     var b = ev.target.closest("button, details");
     if (!b) return;
     if (K && keepClick(b)) return;
@@ -2506,6 +2598,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       if ($("#start-text")) $("#start-text").value = b.dataset.example;
       startIdea(b.dataset.example);
     } else if (b.id === "skip-replay") {
+      // Stopping the replay shows every step at once: the steps are the receipt, so none stays hidden.
+      runStopped[route().arg] = true;
       runShown[route().arg] = $all("#narration li").length;
       revealRun(route().arg);
       $("#how-title").focus();
@@ -2604,7 +2698,14 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     hideToast();
     var drawn = render();                 // Home waits for the dashboard feed, so the new idea box exists only once this settles
     $("#main").focus({ preventScroll: false }); window.scrollTo(0, 0);
-    Promise.resolve(drawn).then(function () { if (want && $("#start-text")) $("#start-text").focus(); });
+    var text = wantText;
+    wantText = "";
+    Promise.resolve(drawn).then(function () {
+      var box = $("#start-text");
+      if (!want || !box) return;
+      if (text) { box.value = text; box.setSelectionRange(text.length, text.length); }   // the sentence back, cursor at its end
+      box.focus();
+    });
   });
   // The live page (DEPLOY.md) shows exactly this wording; app/tests/test_aha.py holds the source to it.
   $("#mode-badge").textContent = STATIC ? "Demo file. Desk checks only: no live search and no AI model yet, and nothing here is connected to anything real."
