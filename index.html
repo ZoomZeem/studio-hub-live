@@ -249,6 +249,19 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 .start input { flex: 1; min-width: 0; min-height: 52px; font: inherit; font-size: 1.05rem; color: var(--text); background: var(--surface);
   border: 1px solid var(--edge); border-radius: 12px; padding: 10px 14px; }
 .start .btn { min-height: 52px; padding: 0 22px; }
+/* Voice: the mic sits inside the idea box, only where the browser can listen (app.js voiceOn). */
+.start .field { flex: 1; min-width: 0; position: relative; display: flex; }
+.start .field.has-mic input { padding-right: 56px; }
+.mic { position: absolute; top: 4px; right: 4px; bottom: 4px; width: 44px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 9px; background: transparent; color: var(--text); cursor: pointer; }
+.mic:hover { background: var(--surface-2); }
+.mic:focus-visible { outline-offset: -3px; }
+.mic[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.mic-note { margin: 8px 0 0; font-size: .95rem; }
+.linkish { display: inline-block; min-height: 24px; padding: 0 2px; border: 0; background: none; font: inherit; font-weight: 600;
+  color: var(--accent); text-decoration: underline; cursor: pointer; }
+.mic-status { margin: 6px 0 0; }
+.mic-status:empty { display: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
 .chip { min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; color: var(--text);
   font: inherit; font-size: .9rem; cursor: pointer; text-align: left; }
@@ -1840,8 +1853,13 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return '<section class="hero" aria-labelledby="start-title"><h1 id="start-title">What should the studio look at next?</h1>' +
       '<p class="lead">Describe an idea in one sentence. Agents take a first look in seconds, and the referee checks their work.</p>' +
       '<form id="start-form" class="start"><label class="sr" for="start-text">Your idea in one sentence</label>' +
+      '<div class="field' + (voiceOn() ? " has-mic" : "") + '">' +
       '<input id="start-text" type="text" maxlength="140" autocomplete="off" placeholder="For example: text me when my bus is running late">' +
+      micButton() + "</div>" +
       '<button class="btn' + (primary === false ? "" : " primary") + '" id="start-go">Start</button></form>' +
+      (voiceOn() ? '<p class="mic-note" id="mic-note" hidden>Your browser may send your voice to its speech service. ' +
+        '<button type="button" class="linkish" id="mic-allow">Tap to allow</button></p>' +
+        '<p class="muted small mic-status" id="mic-status" role="status"></p>' : "") +
       '<p class="field-error" id="start-error" hidden>Write a short sentence about the idea.</p>' +
       '<p class="muted small try-label">Or tap one to check it now:</p>' + chips("Or tap one to check it now") + "</section>";
   }
@@ -2445,6 +2463,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   }
 
   function render() {
+    voiceStop();                          // a redrawn screen has a new idea box: stop listening rather than write into nothing
     var r = route();
     var tab = { idea: "ideas", replay: "replays", run: "today" }[r.name] || r.name;
     $all(".tabs a").forEach(function (a) { if (a.getAttribute("data-tab") === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
@@ -2577,6 +2596,80 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return true;
   }
 
+  // ---------------- voice input ----------------
+  // The browser's own speech recogniser (Web Speech API), offered only where the browser has one. Spoken words land in
+  // the idea box as text to edit; nothing here submits, confirms, starts or spends: the person still presses Start.
+  // This code records no audio, stores nothing and makes no request. The browser does the listening (Chrome sends the
+  // audio to its own speech service), which is why the first tap shows the note before anything starts.
+  var SPEECH = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  var VOICE_LANGS = ["en-AU", "en-US"];   // the second only if the browser says it cannot do the first
+  var VOICE_ERRORS = {
+    "not-allowed": "Voice is blocked for this page. You can type instead.",
+    "service-not-allowed": "Voice is blocked for this page. You can type instead.",
+    "audio-capture": "No microphone found. You can type instead.",
+    "network": "Voice needs a connection in this browser. You can type instead.",
+    "no-speech": "Didn't catch that. Tap the mic to try again.",
+    "language-not-supported": "Voice does not support English here. You can type instead."
+  };
+  var MIC_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" ' +
+    'd="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12z"/></svg>';
+  var voice = { allowed: false, rec: null };   // allowed holds for this page load only: the page stores nothing
+  function voiceOn() { return !!SPEECH && window.isSecureContext !== false; }
+  function micButton() {
+    return voiceOn() ? '<button type="button" class="mic" id="start-mic" aria-pressed="false" aria-label="Speak your idea">' + MIC_SVG + "</button>" : "";
+  }
+  function micSay(text) { var s = $("#mic-status"); if (s) s.textContent = text; }
+  function micPressed(on) {
+    var m = $("#start-mic");
+    if (m) { m.setAttribute("aria-pressed", on ? "true" : "false"); m.setAttribute("aria-label", on ? "Stop listening" : "Speak your idea"); }
+  }
+  function voiceStop() { var r = voice.rec; voice.rec = null; if (r) { try { r.abort(); } catch (e) { /* already ended */ } } }
+  function voiceTap(allow) {
+    if (voice.rec) { voice.rec.stop(); return; }   // a second tap ends listening; the words stay in the box
+    var note = $("#mic-note");
+    if (allow) voice.allowed = true;               // only "Tap to allow" gives consent: a second tap on the mic does not
+    if (!voice.allowed) { if (note) { note.hidden = false; $("#mic-allow").focus(); } return; }
+    if (note) note.hidden = true;
+    listen(0);
+  }
+  function listen(i) {
+    var box = $("#start-text");
+    if (!box) return;
+    var rec, failed = false, base = box.value.trim();   // words already typed stay; the spoken ones go after them
+    try { rec = new SPEECH(); } catch (e) { micSay("Voice is not available here. You can type instead."); return; }
+    voice.rec = rec;
+    rec.lang = VOICE_LANGS[i];
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = function (ev) {
+      var b = $("#start-text"), said = "";
+      if (voice.rec !== rec || !b) return;
+      for (var k = 0; k < ev.results.length; k++) said += ev.results[k][0].transcript;
+      b.value = ((base ? base + " " : "") + said.trim()).slice(0, 140);
+      if ($("#start-error")) $("#start-error").hidden = true;
+    };
+    rec.onerror = function (ev) {
+      if (voice.rec !== rec) return;
+      failed = true;
+      if (ev.error === "language-not-supported" && i + 1 < VOICE_LANGS.length) { voice.rec = null; listen(i + 1); return; }
+      micSay(VOICE_ERRORS[ev.error] || "Voice stopped. You can type instead.");
+    };
+    rec.onend = function () {
+      if (voice.rec !== rec) return;
+      voice.rec = null;
+      micPressed(false);
+      var b = $("#start-text");
+      if (b && b.value.trim() !== base) { micSay("Check the words, then press Start."); b.focus(); }
+      else if (!failed) micSay(VOICE_ERRORS["no-speech"]);
+    };
+    try { rec.start(); } catch (e) { voice.rec = null; micSay("Voice is not available here. You can type instead."); return; }
+    micPressed(true);
+    micSay("Listening. Say your idea.");
+    var m = $("#start-mic");
+    if (m) m.focus();
+  }
+
   var wantStart = false;
   document.addEventListener("click", function (ev) {
     if (ev.target.closest("[data-again]")) { wantStart = true; return; }
@@ -2594,7 +2687,9 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       $("#needs-title").focus({ preventScroll: true });
       return;
     }
-    if (b.dataset.example) {
+    if (b.id === "start-mic" || b.id === "mic-allow") {
+      voiceTap(b.id === "mic-allow");
+    } else if (b.dataset.example) {
       if ($("#start-text")) $("#start-text").value = b.dataset.example;
       startIdea(b.dataset.example);
     } else if (b.id === "skip-replay") {
