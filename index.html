@@ -129,6 +129,13 @@ p { margin: var(--s2) 0; }
 .proof-more > summary { min-height: 44px; padding: 0 var(--s3); font-size: .9rem; font-weight: 600; }
 .proof-more[open] > summary { border-bottom: 1px solid var(--line-soft); }
 
+/* A proof, opened, is a filed sheet: type, whose record, when filed, then the trail (UX recon item 8). */
+.sheet { border-top: 1px solid var(--line-soft); background: var(--surface); border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+.sheet-head { padding: var(--s3) var(--s3) 0; display: grid; gap: 2px; }
+.sheet-head p { margin: 0; }
+.sheet-type { font-family: var(--mono); font-size: var(--t12); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.sheet-title { font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.sheet-filed { font-family: var(--mono); font-size: var(--t12); color: var(--muted); }
 .trail { list-style: none; margin: 0; padding: var(--s3); display: grid; gap: var(--s3); background: var(--surface); border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
 .trail li { display: flex; gap: var(--s3); align-items: flex-start; }
 .trail li .mark { margin-top: 1px; }
@@ -2951,12 +2958,29 @@ SOFTWARE.
     }).join("") + "</ol>";
   }
 
+  // Opened, the proof reads as a filed sheet (UX recon item 8): what kind of record it is, whose it is, and when it was
+  // last filed, from the idea's own latest entry on the record. No date on record says so; it is never made up.
+  function filedAt(id) {
+    var last = "";
+    (state.audit || []).forEach(function (a) { if (a.item === id && a.at && a.at > last) last = a.at; });
+    return last;
+  }
+
+  function sheetHead(item) {
+    var stopped = !!(item.killed || (item.stages && item.stages.ended));
+    var at = filedAt(item.id);
+    return '<header class="sheet-head"><p class="sheet-type">' + (stopped ? "Stop record" : "Proof trail") + "</p>" +
+      '<p class="sheet-title">' + esc(item.title || "") + "</p>" +
+      '<p class="sheet-filed">' + (at ? "Filed " + esc(when(at)) : "No filing date on record") + "</p></header>";
+  }
+
   function proofBlock(item) {
     var p = item.proof;
     if (!p) return "";
     return '<div class="proof p-' + esc(p.tone) + '"><p class="proof-line">' + mark(p.tone) + esc(p.headline) + "</p>" +
       '<details class="proof-more"><summary>See the proof <span class="muted small">(' + p.count +
-      (p.count === 1 ? " thing" : " things") + " on record)</span></summary>" + trail(p) + "</details></div>";
+      (p.count === 1 ? " thing" : " things") + " on record)</span></summary>" +
+      '<section class="sheet">' + sheetHead(item) + trail(p) + "</section></details></div>";
   }
 
   function facts(item) {
