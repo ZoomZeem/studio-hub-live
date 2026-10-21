@@ -610,6 +610,14 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 .voice-line .voice-who { font-family: var(--mono); font-size: var(--t12); color: var(--muted); }
 .voice-line .voice-who b { color: var(--text); font-weight: 600; }
 
+/* The narration line under the status bar (UX recon item 5): the newest step on the record, one line, a tap to its idea. */
+.ledger-line { margin: 0; padding-block: var(--s1); font-size: var(--t12); color: var(--muted); }   /* wraps on a phone: the time and receipt id stay readable */
+.ledger-line a { color: inherit; text-decoration: none; }
+.ledger-line a:hover, .ledger-line a:focus-visible { color: var(--text); text-decoration: underline; }
+.ledger-line .ll-label { color: var(--text); font-weight: 600; }
+.ledger-line time, .ledger-line .ref { white-space: nowrap; }
+.ledger-line .g { margin-inline-end: var(--s1); }
+
 </style>
 </head>
 <body>
@@ -635,6 +643,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     <p class="sb-online off" id="sb-online"><span class="g g-working" aria-hidden="true"></span>System online</p>
     <p class="sb-counts" id="sb-counts"></p>
   </div>
+  <p class="wrap ledger-line" id="ledger-line" role="status" hidden></p>
   <div class="wrap pausebar" id="pausebar">
     <p class="paused-line" id="paused-line" role="status" hidden></p>
     <button type="button" class="btn ghost pause-btn" id="pause-btn" aria-pressed="false" aria-describedby="pause-help" hidden>Pause studio</button>
@@ -2033,6 +2042,19 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     });
     return best;
   }
+  // The narration line under the header (UX recon of 20 Oct, item 5): the newest step on the referee's record, in the record's
+  // own words, with its receipt id and a tap to the idea it belongs to. Nothing is said that the record does not hold, and
+  // nothing moves: with an empty record it says so ("quiet"). Home leaves it out, because its system line already says the latest step.
+  function ledgerLine(st) {
+    var last;
+    if (!st || typeof st !== "object" || !Array.isArray(st.audit)) return null;
+    last = newest(st.audit);
+    if (!last) return { quiet: true };
+    var str = function (v) { return typeof v === "string" ? v : ""; };
+    return { quiet: false, who: str(last.who), what: str(last.what), title: str(last.title), at: str(last.at),
+             ref: "R-" + (typeof last.seq === "number" ? last.seq : "?"), refused: last.status === "REFUSED",
+             href: typeof last.item === "string" && last.item ? "#idea/" + encodeURIComponent(last.item) : "#record" };
+  }
   function refereeMark(st) {
     var items, last, kind;
     if (!st || typeof st !== "object" || !Array.isArray(st.items)) return null;
@@ -2047,7 +2069,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return { kind: kind, word: MARKS[kind].word, glyph: MARKS[kind].glyph, href: MARKS[kind].href, why: MARKS[kind].why };
   }
 
-  var api = { refereeMark: refereeMark, MARKS: MARKS, receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
+  var api = { ledgerLine: ledgerLine, refereeMark: refereeMark, MARKS: MARKS, receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
               templatePlan: templatePlan, render: render, choose: choose, drawBlock: drawBlock, ordered: ordered, slotOf: slotOf,
               planFromParts: planFromParts, block: block, planOf: planOf, PLAN_STEPS: PLAN_STEPS,
               tools: tools, canonical: canonical, sha256: sha256,
@@ -3698,6 +3720,23 @@ SOFTWARE.
     el.setAttribute("data-mark", m.kind);
     el.innerHTML = m.href ? '<a href="' + esc(m.href) + '" title="' + esc(m.why) + '">' + inner + "</a>" : '<span title="' + esc(m.why) + '">' + inner + "</span>";
   }
+  // The narration line under the status bar, on every screen but Home: the newest step on the record (presence.js), and a tap to
+  // its idea. Redrawn only when it changes, so a screen reader does not hear the same line on every screen.
+  var ledgerShown = null;
+  function ledgerLine() {
+    var el = $("#ledger-line"), l = state && window.HubPresence ? window.HubPresence.ledgerLine(state) : null, html;
+    if (!el) return;
+    el.hidden = !l || route().name === "today";
+    if (!l) { html = ""; }
+    else if (l.quiet) { html = "<span>Quiet. Nothing is on the record yet.</span>"; }
+    else {
+      html = '<a href="' + esc(l.href) + '"><span class="ll-label">Latest:</span> ' +
+        (l.refused ? '<span class="g g-blocked" aria-hidden="true"></span><b>Blocked:</b> ' : "") +
+        esc(l.who) + ": " + esc(l.what) + " · " + esc(l.title) + ' · <time class="mono" datetime="' + esc(l.at) + '">' + esc(when(l.at)) + "</time>" +
+        ' <span class="ref mono">' + esc(l.ref) + "</span></a>";
+    }
+    if (html !== ledgerShown) { el.innerHTML = html; ledgerShown = html; }
+  }
   function takeSpend(d) { var nd = normDash(d); spend = nd ? nd.approvals : null; statusBar(); }
   // First load only: "System online" for 600 ms in the bar's own cell, then the counts. Not on later screens, and not
   // at all with reduced motion.
@@ -3767,6 +3806,7 @@ SOFTWARE.
     statusBar();
     pauseBar();
     refMark();
+    ledgerLine();
     onlineLine();
     onePrimary(route().name);
     document.title = ($("#view h1") ? $("#view h1").textContent + " · " : "") + "Studio referee";
