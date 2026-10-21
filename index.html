@@ -1824,6 +1824,7 @@ SOFTWARE.
   var staticChoiceUsed = false;
   var staticPrefix = "";          // "start>" once the offline first run has happened
   var runShown = {};              // idea id -> narration lines already revealed
+  var runStarted = {};            // idea id -> when its playback started (Date.now), for the elapsed time it shows
   var homeMount = null;           // Home's facts and parts, waiting for AI SDK UI to draw them (home.js)
   var runStopped = {};            // idea id -> true once the person stopped its replay
   var wantText = "";              // "Fix the wording": the sentence to put back in Home's box
@@ -2377,14 +2378,23 @@ SOFTWARE.
     var total = lines.length;
     var shown = runShown[id];
     if (shown === undefined) shown = total;      // only a run you just started plays; coming back shows it all
+    // While it plays, the line names the real step on screen and the real time the playback has taken (the design doc's
+    // "step 2 of 5" rule); never a percentage. It says "playing back" because the steps are a receipt, not live work.
+    function playing() {
+      if (!shown) return "Playing back " + total + " steps.";
+      var who = lines[shown - 1].querySelector(".who");
+      return "Playing back step " + shown + " of " + total + (who && who.textContent ? ": " + who.textContent : "") +
+        " · " + ((Date.now() - runStarted[id]) / 1000).toFixed(1) + " s";
+    }
     function paint() {
       lines.forEach(function (li, i) { li.hidden = i >= shown; });
-      $("#run-status").textContent = shown < total ? "Playing back the steps…" :
+      $("#run-status").textContent = shown < total ? playing() :
         (runStopped[id] ? "Replay stopped. All " + total + " steps are shown." : "All " + total + " steps shown.");
       $("#run-status").parentNode.classList.toggle("busy", shown < total);
       $("#skip-replay").hidden = shown >= total;
     }
     if (reducedMotion()) shown = total;
+    if (shown < total && runStarted[id] === undefined) runStarted[id] = Date.now();
     clearTimeout(revealRun._t);
     paint();
     if (shown >= total) { runShown[id] = total; return; }
