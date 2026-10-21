@@ -1035,7 +1035,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     }
     var blocks = [
       { component: "system_line", slot: "top", props: sys },
-      { component: "status_bar", slot: "main", props: { counts: Object.keys(COUNTS).map(ref) } },
+      // No counts block: the page's status bar shows ideas, waiting on you, blocked and stopped on every screen (#89).
       { component: "idea_box", slot: "main", props: { primary: needs === 0 } },
       needs > 0 ? { component: "needs_list", slot: "main", props: {} } : { component: "empty_state", slot: "main", props: { kind: "all_clear" } }
     ];
