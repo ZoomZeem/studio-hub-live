@@ -560,6 +560,15 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 .plan-cost b { color: var(--text); }
 .plan-go { margin-block: var(--s3) 0; }
 
+/* The hosted site's footer and terms page (slice A3). */
+.kept-link { padding-block: var(--s5); }
+.privacy-line { margin-block: var(--s2) 0; }
+.site-foot { margin-block-start: var(--s7); padding-block: var(--s4); border-block-start: 1px solid var(--line); font-size: .875rem; }
+.terms { max-inline-size: 42rem; padding-block-end: var(--s6); }
+.terms h1 { font-size: 1.5rem; margin-block: var(--s5) var(--s3); }
+.terms h2 { font-size: 1.125rem; margin-block: var(--s5) var(--s2); }
+.terms ul { padding-inline-start: var(--s5); }
+
 </style>
 </head>
 <body>
@@ -1269,6 +1278,11 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   var DELETE_WHAT = "This removes your account and the ideas saved to it. It cannot be undone.";
   var DELETE_LEFT = "Private links you already made or shared, and anonymous counts, are not removed.";
   var DELETED = "Deleted: your account and the ideas saved to it.";
+  // The badge on the hosted page. The sample ideas are still the demo's; keeping an idea is real.
+  var BADGE = "Sample studio. Desk checks only: no live search and no AI model yet. Ideas you keep are saved.";
+  // Under the idea box on the hosted page: the main things cloud/schema.sql keeps about a person. The terms list all of
+  // it. Deleting needs the alpha open: while it rests, cloud/ answers every route with 503.
+  var PRIVACY = "We keep your GitHub name and number, when you last signed in, and the ideas you keep. You can delete them while the alpha is open.";
   var PENDING_KEY = "zz_pending_keep";
   var PENDING_MAX_MS = 60 * 60 * 1000;
   var RETURN = "/#kept";
@@ -1354,6 +1368,32 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return "";
   }
 
+  /** A private link's path is /k/ and the 22-character id cloud/ made; anything else is not a link. */
+  function linkId(pathname) {
+    var m = /^\/k\/([A-Za-z0-9_-]{22})$/.exec(String(pathname || ""));
+    return m ? m[1] : null;
+  }
+
+  /** What a private link opens: the kept sentence, the verdict it had then, one action (check it again now), and a way to
+   *  delete the link, so "Delete it any time" holds after the person has left the page where they made it. */
+  function linkHtml(res, id) {
+    var b = res && res.body;
+    if (!res || res.status !== 200 || !b || typeof b.idea !== "string") {
+      var gone = res && res.status === 404;
+      return '<section class="kept-link"><h1>' + (gone ? "This link does not open anything" : "This link cannot open right now") + "</h1>" +
+        "<p>" + esc(gone ? "It was deleted, or it never existed." : refusal(res)) + '</p><p><a class="btn" href="#today">Go to the studio</a></p></section>';
+    }
+    var run = b.run && typeof b.run === "object" ? b.run : {};
+    var when = typeof b.created_at === "number" ? new Date(b.created_at).toISOString().slice(0, 10) : "";
+    return '<section class="kept-link"><p class="label">Kept under a private link</p><h1>' + esc(b.idea) + "</h1>" +
+      (run.verdict ? '<p class="verdict">' + esc(run.verdict) + "</p>" : "") +
+      (typeof run.have === "number" && typeof run.of === "number" ? '<p class="muted small">' + run.have + " of " + run.of + " checks had evidence when it was kept.</p>" : "") +
+      (run.why ? "<p>" + esc(run.why) + "</p>" : "") +
+      '<p class="muted small">' + (when ? "Kept on " + esc(when) + ". " : "") + "Anyone with this link can see this idea.</p>" +
+      '<div class="keep-acts"><button type="button" class="btn primary" data-keep-recheck="1">Check it again now</button>' +
+      (id ? '<button type="button" class="btn ghost" data-keep-unlink="' + esc(id) + '">Delete this link</button>' : "") + "</div></section>";
+  }
+
   /** The hosted backend, reached on this same site. Every call answers {status, body}; a network failure is status 0. */
   function client(base, fetchImpl) {
     var f = fetchImpl || (typeof fetch === "function" ? fetch.bind(root) : null);
@@ -1369,6 +1409,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       me: function () { return call("GET", "/api/me"); },
       keep: function (items) { return call("POST", "/api/ideas", { items: items }); },
       link: function (one) { return call("POST", "/api/links", one); },
+      getLink: function (id) { return call("GET", "/api/links/" + encodeURIComponent(id)); },
       unlink: function (id) { return call("DELETE", "/api/links/" + encodeURIComponent(id)); },
       signout: function () { return call("POST", "/api/signout", {}); },
       deleteMe: function () { return call("POST", "/api/me/delete", {}); },
@@ -1404,8 +1445,8 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return res && res.status === 0 ? UNREACHABLE : "Not kept. Try again in a minute.";
   }
 
-  var api = { DELETE_WHAT: DELETE_WHAT, DELETE_LEFT: DELETE_LEFT, DELETED: DELETED, ALPHA: ALPHA, RESTING: RESTING, UNREACHABLE: UNREACHABLE, PAUSED: PAUSED, RETURN: RETURN, PENDING_KEY: PENDING_KEY,
-              readMode: readMode, banner: banner, payload: payload, view: view, html: html, client: client, pending: pending, refusal: refusal };
+  var api = { BADGE: BADGE, PRIVACY: PRIVACY, DELETE_WHAT: DELETE_WHAT, DELETE_LEFT: DELETE_LEFT, DELETED: DELETED, ALPHA: ALPHA, RESTING: RESTING, UNREACHABLE: UNREACHABLE, PAUSED: PAUSED, RETURN: RETURN, PENDING_KEY: PENDING_KEY,
+              readMode: readMode, banner: banner, linkId: linkId, linkHtml: linkHtml, payload: payload, view: view, html: html, client: client, pending: pending, refusal: refusal };
   root.HubKeep = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -1496,7 +1537,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   // ---- "Keep this idea" (alpha slice A2). Only the hosted build sets window.STUDIO_CLOUD; every other build skips this.
   var K = window.STUDIO_CLOUD && window.HubKeep ? window.HubKeep : null;
   var cloud = K ? K.client(String(window.STUDIO_CLOUD.base || ""), null) : null;
-  var keep = { mode: { kind: "unreachable" }, me: null, kept: {}, link: {}, note: {}, askDelete: false };
+  var keep = { mode: { kind: "unreachable" }, me: null, kept: {}, link: {}, note: {}, askDelete: false, linkIdea: null };
   function storage() { try { return window.localStorage; } catch (e) { return null; } }
   function itemById(id) { return state && state.items.filter(function (v) { return v.id === id; })[0]; }
   function keepArea(item) {
@@ -1527,6 +1568,14 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       if (keep.mode.kind !== "open") return null;
       return cloud.me().then(function (m) { keep.me = m.status === 200 && m.body && m.body.signed_in ? m.body : null; });
     }).then(function () {
+      // A private link (/k/<id>) opens its kept idea; the hosted site serves this same page for that path (A3).
+      var lid = location.hash ? null : K.linkId(location.pathname);
+      if (lid) {
+        return cloud.getLink(lid).then(function (res) {
+          keep.linkIdea = res.status === 200 && res.body && typeof res.body.idea === "string" ? res.body.idea : null;
+          $("#view").innerHTML = K.linkHtml(res, lid);
+        });
+      }
       var idea = K.pending.take(storage(), Date.now());
       if (!idea) { if (location.hash === "#kept") location.hash = "#today"; else render(); return null; }
       return api.start(idea).then(function (res) {
@@ -1861,6 +1910,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
         '<button type="button" class="linkish" id="mic-allow">Tap to allow</button></p>' +
         '<p class="muted small mic-status" id="mic-status" role="status"></p>' : "") +
       '<p class="field-error" id="start-error" hidden>Write a short sentence about the idea.</p>' +
+      (K ? '<p class="muted small privacy-line" id="privacy-line">' + esc(K.PRIVACY) + "</p>" : "") +
       '<p class="muted small try-label">Or tap one to check it now:</p>' + chips("Or tap one to check it now") + "</section>";
   }
 
@@ -2567,9 +2617,12 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       b.disabled = true;
       cloud.unlink(d.keepUnlink).then(function (res) {
         Object.keys(keep.link).forEach(function (k) { if (keep.link[k].id === d.keepUnlink && res.status === 200) delete keep.link[k]; });
+        if (res.status === 200) keep.linkIdea = null;
         render();
         toast(res.status === 200 ? "Link deleted. Nobody can open it now." : K.refusal(res));
       });
+    } else if (d.keepRecheck) {
+      if (keep.linkIdea) startIdea(keep.linkIdea);
     } else if (d.keepCopy) {
       var input = $("#keep-url");
       var done = function () { toast("Link copied."); };
@@ -2802,8 +2855,9 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       box.focus();
     });
   });
-  // The live page (DEPLOY.md) shows exactly this wording; app/tests/test_aha.py holds the source to it.
-  $("#mode-badge").textContent = STATIC ? "Demo file. Desk checks only: no live search and no AI model yet, and nothing here is connected to anything real."
+  // The live page (DEPLOY.md) shows exactly this wording; app/tests/test_aha.py holds the source to it. The hosted
+  // build (A3) shows keep.js's BADGE instead, held in source the same way (app/tests/test_hosted.py).
+  $("#mode-badge").textContent = K ? K.BADGE : STATIC ? "Demo file. Desk checks only: no live search and no AI model yet, and nothing here is connected to anything real."
     : "Demo data. Desk checks only: no live search and no AI model yet, and nothing here runs for real.";
   refresh().then(keepBoot);
 })();
