@@ -2980,7 +2980,9 @@ SOFTWARE.
   // leads with its own reason instead of repeating the same sentence.
   function suggestionList(item, compact, flaggedOnly, shared, quiet) {
     var open = flaggedOnly ? item.suggestions.filter(function (s) { return FLAG_KINDS.indexOf(s.kind) >= 0; }) : item.suggestions;
-    if (!open.length) return compact ? "" : '<p class="muted small">The referee has no suggestion for this one right now.</p>';
+    // An empty section is not drawn (UX recon rule 3: reveal a panel when it has content). The heading above it is
+    // already only drawn when there are suggestions, so an idea without any simply has no suggestions section.
+    if (!open.length) return "";
     return '<ul class="sugs">' + open.map(function (s) {
       var decided = s.decision
         ? '<span class="decided ' + esc(s.decision.choice) + '">' + (s.decision.choice === "approved" ? "✓ " + words(s.kind)[2] : "✕ " + words(s.kind)[3]) +
