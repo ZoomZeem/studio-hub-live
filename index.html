@@ -301,7 +301,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 .timeline .why { margin-top: 4px; }
 .timeline .why summary { min-height: 32px; font-size: .95rem; }
 .refs, .evidence, .plain { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; }
-.plain li::before { content: "â "; color: var(--muted); }
+.plain li::before { content: "– "; color: var(--muted); }
 .evidence li { display: grid; grid-template-columns: 14px 1fr; column-gap: 8px; align-items: start; }
 .evidence .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; background: var(--good); grid-row: span 2; }
 .evidence li.grey .dot { background: transparent; border: 2px solid var(--muted); }
@@ -1533,7 +1533,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 
   var MAX_BLOCKS = 5;
   var SLOTS = ["top", "main"];
-  // State words (docs/design/hub-interaction-ux-language.md Â§4, DYNAMIC-PRESENCE "Presence cues"). A glyph always shows
+  // State words (docs/design/hub-interaction-ux-language.md §4, DYNAMIC-PRESENCE "Presence cues"). A glyph always shows
   // with its word, so no state is told by colour alone.
   var STATE_WORDS = { working: "Working", waiting: "Waiting on you", ready: "Ready", done: "Done", stopped: "Stopped", resting: "Resting" };
   // The counts the status bar may show. Their labels are code-owned and never vary (DYNAMIC-PRESENCE, variation rules).
@@ -1780,10 +1780,10 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
   function ref(id) { return { $fact: id }; }
   /** A sentence cut at a word boundary, so a number is never cut in half. */
   function fit(s, max) {
-    s = String(s).replace(/</g, "â¹").replace(/>/g, "âº").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    s = String(s).replace(/</g, "‹").replace(/>/g, "›").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
     if (s.length <= max) return s;
     var cut = s.slice(0, max - 1), sp = cut.lastIndexOf(" ");
-    return (sp > 0 ? cut.slice(0, sp) : "") + "â¦";
+    return (sp > 0 ? cut.slice(0, sp) : "") + "…";
   }
 
   /** The template layout: code chooses and code words. It must always pass validate (a test holds it to that). */
@@ -1856,7 +1856,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       return '<p class="tally">' + p.counts.map(function (c) {
         var w = COUNTS[c.id];
         return "<span><b>" + esc(String(c.value)) + "</b> " + esc(c.value === 1 ? w[0] : w[1]) + "</span>";
-      }).join(" Â· ") + "</p>";
+      }).join(" · ") + "</p>";
     },
     now_feed: function (p, pack) {
       var more = pack.lines.length > p.lines.length;
@@ -1885,7 +1885,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     },
     empty_state: function (p, pack) {
       var nx = pack && pack.facts && pack.facts["next.step"] ? pack.facts["next.step"].value : null;
-      return '<div class="empty"><p class="empty-mark" aria-hidden="true">â</p><p class="empty-head">All clear.</p>' +
+      return '<div class="empty"><p class="empty-mark" aria-hidden="true">✓</p><p class="empty-head">All clear.</p>' +
         "<p>Nothing needs you right now. The agents carry on, and the referee will flag anything only you can decide.</p>" +
         // Rule 9: say what happens next, from the record. With nothing under way, say that; never guess.
         (nx ? '<p class="empty-next"><b>Next:</b> ' + esc(nx.who) + ' has <a href="#idea/' + encodeURIComponent(nx.item) + '">' + esc(nx.title) + "</a> (" + esc(nx.label) + ").</p>"
@@ -2248,7 +2248,7 @@ ${A}`,p++}else Vx(m,w,_)?f=m.slice(m.charCodeAt(w+6)===Br?w+7:w+6,x)||void 0:y(m
 `,w)}return m.slice(w)}for(;w<m.length;){let x=m.indexOf("\r",w),_=m.indexOf(`
 `,w),I=-1;if(x!==-1&&_!==-1?I=x<_?x:_:x!==-1?x===m.length-1?I=-1:I=x:_!==-1&&(I=_),I===-1)break;y(m,w,I),w=I+1,m.charCodeAt(w-1)===cA&&m.charCodeAt(w)===qx&&w++}return m.slice(w)}function y(m,w,x){if(w===x){v();return}let _=m.charCodeAt(w);if(Bx(m,w,_)){let Xr=m.charCodeAt(w+5)===Br?w+6:w+5,Am=m.slice(Xr,x);l=p===0?Am:`${l}
 ${Am}`,p++;return}if(Vx(m,w,_)){f=m.slice(m.charCodeAt(w+6)===Br?w+7:w+6,x)||void 0;return}if(_===105&&m.charCodeAt(w+1)===100&&m.charCodeAt(w+2)===58){let Xr=m.slice(m.charCodeAt(w+3)===Br?w+4:w+3,x);Xr.includes("\0")||(d=Xr);return}if(_===58){if(o){let Xr=m.slice(w,x);o(Xr.slice(m.charCodeAt(w+1)===Br?2:1))}return}let I=m.slice(w,x),A=I.indexOf(":");if(A===-1){g(I,"",I);return}let de=I.slice(0,A),pr=I.charCodeAt(A+1)===Br?2:1,Mu=I.slice(A+pr);g(de,Mu,I)}function g(m,w,x){switch(m){case"event":f=w||void 0;break;case"data":l=p===0?w:`${l}
-${w}`,p++;break;case"id":w.includes("\0")||(d=w);break;case"retry":/^\d+$/.test(w)?r(parseInt(w,10)):n(new Ui(`Invalid \`retry\` value: "${w}"`,{type:"invalid-retry",value:w,line:x}));break;default:n(new Ui(`Unknown field "${m.length>20?`${m.slice(0,20)}â¦`:m}"`,{type:"unknown-field",field:m,value:w,line:x}));break}}function v(){p>0&&t({id:d,event:f,data:l}),d=void 0,l="",p=0,f=void 0}function S(m={}){if(m.consume&&i.length>0){let w=i.join("");y(w,0,w.length)}u=!0,d=void 0,l="",p=0,f=void 0,i.length=0,s=0,h=!1}return{feed:b,reset:S}}function Bx(e,t,n){return n===100&&e.charCodeAt(t+1)===97&&e.charCodeAt(t+2)===116&&e.charCodeAt(t+3)===97&&e.charCodeAt(t+4)===58}function Vx(e,t,n){return n===101&&e.charCodeAt(t+1)===118&&e.charCodeAt(t+2)===101&&e.charCodeAt(t+3)===110&&e.charCodeAt(t+4)===116&&e.charCodeAt(t+5)===58}var Zi=class extends TransformStream{constructor({onError:t,onRetry:n,onComment:r,maxBufferSize:o}={}){let a;super({start(i){a=Hx({onEvent:s=>{i.enqueue(s)},onError(s){typeof t=="function"&&t(s),(t==="terminate"||s.type==="max-buffer-size-exceeded")&&i.error(s)},onRetry:n,onComment:r,maxBufferSize:o})},transform(i){a.feed(i)}})}};var hk=new TextDecoder;var{btoa:gk,atob:yk}=globalThis;function Qx(e=globalThis){return e.navigator?.userAgent?e.navigator.userAgent.toLowerCase():e.process?.versions?.node?`node.js/${e.process.version}`:e.EdgeRuntime?"vercel-edge":""}function dr(e){if(e==null)return{};let t={};if(e instanceof Headers)e.forEach((n,r)=>{t[r.toLowerCase()]=n});else{Array.isArray(e)||(e=Object.entries(e));for(let[n,r]of e)r!=null&&(t[n.toLowerCase()]=r)}return t}function Wx(e,...t){let n=new Headers(dr(e)),r=n.get("user-agent")||"";return n.set("user-agent",[r,...t].filter(Boolean).join(" ")),Object.fromEntries(n.entries())}var mA=[{mediaType:"audio/aac",bytesPrefix:[255,240]},{mediaType:"audio/aac",bytesPrefix:[255,241]},{mediaType:"audio/aac",bytesPrefix:[255,248]},{mediaType:"audio/aac",bytesPrefix:[255,249]},{mediaType:"audio/mpeg",bytesPrefix:[255,251]},{mediaType:"audio/mpeg",bytesPrefix:[255,250]},{mediaType:"audio/mpeg",bytesPrefix:[255,243]},{mediaType:"audio/mpeg",bytesPrefix:[255,242]},{mediaType:"audio/mpeg",bytesPrefix:[255,227]},{mediaType:"audio/mpeg",bytesPrefix:[255,226]},{mediaType:"audio/wav",bytesPrefix:[82,73,70,70,null,null,null,null,87,65,86,69]},{mediaType:"audio/ogg",bytesPrefix:[79,103,103,83]},{mediaType:"audio/flac",bytesPrefix:[102,76,97,67]},{mediaType:"audio/aac",bytesPrefix:[64,21,0,0]},{mediaType:"audio/webm",bytesPrefix:[26,69,223,163]}],vk=[...mA,{mediaType:"audio/mp4",bytesPrefix:[0,0,0,null,102,116,121,112]}];async function yu(e){try{await e.body?.cancel()}catch{}}var eE="AI_DownloadError",tE=`vercel.ai.error.${eE}`,hA=Symbol.for(tE),qe=class extends he{constructor({url:e,statusCode:t,statusText:n,cause:r,message:o=r==null?`Failed to download ${e}: ${t} ${n}`:`Failed to download ${e}: ${r}`}){super({name:eE,message:o,cause:r}),this[hA]=!0,this.url=e,this.statusCode=t,this.statusText=n}static isInstance(e){return he.hasMarker(e,tE)}};function gA(e=globalThis){return e.window!=null}function mm(e,t){try{return new URL(e).origin===new URL(t).origin}catch{return!1}}function yA(e){let t;try{t=new URL(e)}catch{throw new qe({url:e,message:`Invalid URL: ${e}`})}if(t.protocol==="data:")return;if(t.protocol!=="http:"&&t.protocol!=="https:")throw new qe({url:e,message:`URL scheme must be http, https, or data, got ${t.protocol}`});let n=t.hostname.toLowerCase().replace(/\.+$/,"");if(!n)throw new qe({url:e,message:"URL must have a hostname"});if(n==="localhost"||n.endsWith(".local")||n.endsWith(".localhost"))throw new qe({url:e,message:`URL with hostname ${n} is not allowed`});if(n.startsWith("[")&&n.endsWith("]")){if(nE(n.slice(1,-1)))throw new qe({url:e,message:`URL with IPv6 address ${n} is not allowed`});return}if(ym(n)&&vm(n))throw new qe({url:e,message:`URL with IP address ${n} is not allowed`})}function vA({address:e,family:t,hostname:n}){if(t===4?!ym(e)||vm(e):t!==6||nE(e))throw new qe({url:n,message:`Hostname ${n} resolved to disallowed IP address ${e}`})}function ym(e){let t=e.split(".");return t.length!==4?!1:t.every(n=>{let r=Number(n);return Number.isInteger(r)&&r>=0&&r<=255&&String(r)===n})}function vm(e){let[t,n,r]=e.split(".").map(Number);return t===0||t===10||t===100&&n>=64&&n<=127||t===127||t===169&&n===254||t===172&&n>=16&&n<=31||t===192&&n===0&&r===0||t===192&&n===0&&r===2||t===192&&n===168||t===198&&(n===18||n===19)||t===198&&n===51&&r===100||t===203&&n===0&&r===113||t>=224}function bA(e){let t=e.toLowerCase(),n=t.indexOf("%");n!==-1&&(t=t.slice(0,n));let r=t.split("::");if(r.length>2)return null;let o=i=>{if(i==="")return[];let s=[],u=i.split(":");for(let d=0;d<u.length;d++){let l=u[d];if(l.includes(".")){if(d!==u.length-1||!ym(l))return null;let[p,f,h,b]=l.split(".").map(Number);s.push(p<<8|f,h<<8|b);continue}if(!/^[0-9a-f]{1,4}$/.test(l))return null;s.push(parseInt(l,16))}return s},a=o(r[0]);if(a===null)return null;if(r.length===2){let i=o(r[1]);if(i===null)return null;let s=8-a.length-i.length;return s<0?null:[...a,...new Array(s).fill(0),...i]}return a.length===8?a:null}function nE(e){let t=bA(e);if(t===null)return!0;let n=r=>t.slice(0,r).every(o=>o===0);return n(7)&&(t[7]===0||t[7]===1)||(t[0]&65024)===64512||(t[0]&65472)===65152||(t[0]&65472)===65216||(t[0]&65280)===65280||t[0]===8193&&t[1]===3512||t[0]===16383&&(t[1]&61440)===0?!0:n(6)||n(5)&&t[5]===65535||n(4)&&t[4]===65535&&t[5]===0||t[0]===100&&t[1]===65435&&t[2]===0&&t[3]===0&&t[4]===0&&t[5]===0||t[0]===100&&t[1]===65435&&t[2]===1?vm(`${t[6]>>8&255}.${t[6]&255}.${t[7]>>8&255}.${t[7]&255}`):!1}function wA(e){return((t,n,r)=>{e(t,{...n,all:!0},(o,a)=>{if(o){r(o);return}try{let[i]=a;if(i==null)throw new Error(`Hostname ${t} did not resolve to an address`);for(let{address:s,family:u}of a)vA({address:s,family:u,hostname:t});n.all===!0?r(null,a):r(null,i.address,i.family)}catch(i){r(i instanceof Error?i:new Error(String(i)))}})})}var Gx;function SA(){let e=globalThis.process;return e?.release?.name==="node"&&e.versions?.bun==null&&e.versions?.deno==null&&e.title!=="workerd"&&globalThis.EdgeRuntime==null}async function TA(){return SA()?Gx??(Gx=Promise.resolve().then(xA)):globalThis.fetch}function xA(){let e=Fx("node:module"),{lookup:t}=Fx("node:dns"),{Agent:n,fetch:r}=e.createRequire(rE())("undici"),o=new n({connect:{lookup:wA(t)}});return((a,i)=>r(a,{...i,dispatcher:o}))}function Fx(e){let t=globalThis.process?.getBuiltinModule?.(e);if(t==null)throw new Error(`Node.js built-in module ${e} is unavailable`);return t}function rE(){let e=Error.prepareStackTrace;try{Error.prepareStackTrace=(o,a)=>a;let t=new Error("Capture current module path");Error.captureStackTrace(t,rE);let[n]=t.stack,r=n?.getFileName();if(r==null)throw new Error("Unable to determine the current module path");return r}finally{Error.prepareStackTrace=e}}var EA=["connection","keep-alive","te","trailer","transfer-encoding","upgrade","host","forwarded","proxy-authorization","via","x-forwarded-for","x-forwarded-host","x-forwarded-proto","x-real-ip","metadata","metadata-flavor","x-aws-ec2-metadata-token","x-metadata-token","cookie","set-cookie"];function oE(e){let t=new Headers(e);for(let n of EA)t.delete(n);return t}var _A=10,MA=new Set([301,302,303,307,308]);async function CA(e){return e==null||e===globalThis.fetch?await TA():e}async function IA({url:e,headers:t,abortSignal:n,maxRedirects:r=_A,fetch:o,trustedOrigin:a}){let i=t===void 0?void 0:oE(t),s=d=>{let l={signal:n,redirect:d};return i!==void 0&&(l.headers=new Headers(i)),l},u=e;for(let d=0;d<=r;d++){let l=a!==void 0&&mm(u,a);l||yA(u);let p=l&&o!=null?o:l?globalThis.fetch:await CA(o),f=await p(u,s("manual"));if(f.type==="opaqueredirect"){if(!gA())throw new qe({url:e,message:`Redirect from ${u} could not be validated and was blocked`});return await p(u,s("follow"))}let h=f.headers?.get("location");if(MA.has(f.status)&&h){yu(f);let b=new URL(h,u).toString();if(i!==void 0&&!mm(b,u)){let T=i.get("user-agent");i=new Headers(T==null?void 0:{"user-agent":T})}u=b;continue}return f}throw new qe({url:e,message:`Too many redirects (max ${r})`})}var RA=new Set(["accept","accept-language","baggage","cache-control","idempotency-key","if-match","if-modified-since","if-none-match","if-range","if-unmodified-since","pragma","range","traceparent","tracestate","user-agent","x-correlation-id","x-request-id"]);async function aE({headers:e,credentialedOrigin:t,untrustedFirstHopHeaders:n,...r}){let o;if(e!==void 0){o=oE(e);let a=t??r.trustedOrigin;if(a===void 0||!mm(r.url,a)){let i=new Set([...RA,...(n??[]).map(s=>s.toLowerCase())]);o=new Headers([...o].filter(([s])=>i.has(s)))}}return IA({...r,headers:o})}var bm=2147483648;async function iE({response:e,url:t,maxBytes:n=bm}){let r=e.headers.get("content-length");if(r!=null){let l=parseInt(r,10);if(!isNaN(l)&&l>n)throw await yu(e),new qe({url:t,message:`Download of ${t} exceeded maximum size of ${n} bytes (Content-Length: ${l}).`})}let o=e.body;if(o==null)return new Uint8Array(0);let a=o.getReader(),i=[],s=0;try{for(;;){let{done:l,value:p}=await a.read();if(l)break;if(s+=p.length,s>n)throw new qe({url:t,message:`Download of ${t} exceeded maximum size of ${n} bytes.`});i.push(p.byteLength<p.buffer.byteLength?new Uint8Array(p):p)}}finally{try{await a.cancel()}catch{}finally{a.releaseLock()}}let u=new Uint8Array(s),d=0;for(let l of i)u.set(l,d),d+=l.length;return u}var Ie=({prefix:e,size:t=16,alphabet:n="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",separator:r="-"}={})=>{let o=()=>{let a=n.length,i=new Array(t);for(let s=0;s<t;s++)i[s]=n[Math.random()*a|0];return i.join("")};if(e==null)return o;if(n.includes(r))throw new cm({argument:"separator",message:`The separator "${r}" must not be part of the alphabet "${n}".`});return()=>`${e}${r}${o()}`},wm=Ie();function sE(e){return globalThis.Buffer?.isBuffer(e)??!1}var AA=/"(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])"\s*:/,OA=/"(?:c|\\u0063)(?:o|\\u006[Ff])(?:n|\\u006[Ee])(?:s|\\u0073)(?:t|\\u0074)(?:r|\\u0072)(?:u|\\u0075)(?:c|\\u0063)(?:t|\\u0074)(?:o|\\u006[Ff])(?:r|\\u0072)"\s*:/;function Yx(e){let t=JSON.parse(e);return t===null||typeof t!="object"||AA.test(e)===!1&&OA.test(e)===!1?t:zA(t)}function zA(e){let t=[e];for(;t.length;){let n=t;t=[];for(let r of n){if(Object.prototype.hasOwnProperty.call(r,"__proto__"))throw new SyntaxError("Object contains forbidden prototype property");if(Object.prototype.hasOwnProperty.call(r,"constructor")&&r.constructor!==null&&typeof r.constructor=="object"&&Object.prototype.hasOwnProperty.call(r.constructor,"prototype"))throw new SyntaxError("Object contains forbidden prototype property");for(let o in r){let a=r[o];a&&typeof a=="object"&&t.push(a)}}}return e}function NA(e){let{stackTraceLimit:t}=Error;try{Error.stackTraceLimit=0}catch{return Yx(e)}try{return Yx(e)}finally{Error.stackTraceLimit=t}}function Sm(e){if(e.type==="object"||Array.isArray(e.type)&&e.type.includes("object")){let{additionalProperties:n}=e;e.additionalProperties=n!=null&&typeof n!="boolean"?cr(n):!1;let{properties:r}=e;if(r!=null)for(let o of Object.keys(r))r[o]=cr(r[o])}e.items!=null&&(e.items=Array.isArray(e.items)?e.items.map(cr):cr(e.items)),e.anyOf!=null&&(e.anyOf=e.anyOf.map(cr)),e.allOf!=null&&(e.allOf=e.allOf.map(cr)),e.oneOf!=null&&(e.oneOf=e.oneOf.map(cr));let{definitions:t}=e;if(t!=null)for(let n of Object.keys(t))t[n]=cr(t[n]);return e}function cr(e){return typeof e=="boolean"?e:Sm(e)}var DA=Symbol("Let zodToJsonSchema decide on which parser to use"),Jx={name:void 0,$refStrategy:"root",basePath:["#"],effectStrategy:"input",pipeStrategy:"all",dateStrategy:"format:date-time",mapStrategy:"entries",removeAdditionalStrategy:"passthrough",allowedAdditionalProperties:!0,rejectedAdditionalProperties:!1,definitionPath:"definitions",strictUnions:!1,definitions:{},errorMessages:!1,patternStrategy:"escape",applyRegexFlags:!1,emailStrategy:"format:email",base64Strategy:"contentEncoding:base64",nameStrategy:"ref"},$A=e=>typeof e=="string"?{...Jx,name:e}:{...Jx,...e};function bt(){return{}}function kA(e,t){let n={type:"array"};return e.type?._def&&e.type?._def?.typeName!=="ZodAny"&&(n.items=Y(e.type._def,{...t,currentPath:[...t.currentPath,"items"]})),e.minLength&&(n.minItems=e.minLength.value),e.maxLength&&(n.maxItems=e.maxLength.value),e.exactLength&&(n.minItems=e.exactLength.value,n.maxItems=e.exactLength.value),n}function PA(e){let t={type:"integer",format:"int64"};if(!e.checks)return t;for(let n of e.checks)switch(n.kind){case"min":n.inclusive?t.minimum=n.value:t.exclusiveMinimum=n.value;break;case"max":n.inclusive?t.maximum=n.value:t.exclusiveMaximum=n.value;break;case"multipleOf":t.multipleOf=n.value}return t}function jA(){return{type:"boolean"}}function lE(e,t){return Y(e.type._def,t)}var UA=(e,t)=>Y(e.innerType._def,t);function uE(e,t,n){let r=n??t.dateStrategy;if(Array.isArray(r))return{anyOf:r.map(o=>uE(e,t,o))};switch(r){case"string":case"format:date-time":return{type:"string",format:"date-time"};case"format:date":return{type:"string",format:"date"};case"integer":return ZA(e)}}var ZA=e=>{let t={type:"integer",format:"unix-time"};for(let n of e.checks)switch(n.kind){case"min":t.minimum=n.value;break;case"max":t.maximum=n.value}return t};function LA(e,t){return{...Y(e.innerType._def,t),default:e.defaultValue()}}function qA(e,t){return t.effectStrategy==="input"?Y(e.schema._def,t):bt()}function BA(e){return{type:"string",enum:Array.from(e.values)}}var VA=e=>"type"in e&&e.type==="string"?!1:"allOf"in e;function HA(e,t){let n=[Y(e.left._def,{...t,currentPath:[...t.currentPath,"allOf","0"]}),Y(e.right._def,{...t,currentPath:[...t.currentPath,"allOf","1"]})].filter(o=>!!o),r=[];return n.forEach(o=>{if(VA(o))r.push(...o.allOf);else{let a=o;if("additionalProperties"in o&&o.additionalProperties===!1){let{additionalProperties:i,...s}=o;a=s}r.push(a)}}),r.length?{allOf:r}:void 0}function GA(e){let t=typeof e.value;return t!=="bigint"&&t!=="number"&&t!=="boolean"&&t!=="string"?{type:Array.isArray(e.value)?"array":"object"}:{type:t==="bigint"?"integer":t,const:e.value}}var fm,Bt={cuid:/^[cC][^\s-]{8,}$/,cuid2:/^[0-9a-z]+$/,ulid:/^[0-9A-HJKMNP-TV-Z]{26}$/,email:/^(?!\.)(?!.*\.\.)([a-zA-Z0-9_'+\-.]*)[a-zA-Z0-9_+-]@([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/,emoji:()=>(fm===void 0&&(fm=RegExp("^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$","u")),fm),uuid:/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/,ipv4:/^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/,ipv4Cidr:/^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/(3[0-2]|[12]?[0-9])$/,ipv6:/^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/,ipv6Cidr:/^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/,base64:/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/,base64url:/^([0-9a-zA-Z-_]{4})*(([0-9a-zA-Z-_]{2}(==)?)|([0-9a-zA-Z-_]{3}(=)?))?$/,nanoid:/^[a-zA-Z0-9_-]{21}$/,jwt:/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/};function cE(e,t){let n={type:"string"};if(e.checks)for(let r of e.checks)switch(r.kind){case"min":n.minLength=typeof n.minLength=="number"?Math.max(n.minLength,r.value):r.value;break;case"max":n.maxLength=typeof n.maxLength=="number"?Math.min(n.maxLength,r.value):r.value;break;case"email":switch(t.emailStrategy){case"format:email":Vt(n,"email",r.message,t);break;case"format:idn-email":Vt(n,"idn-email",r.message,t);break;case"pattern:zod":Je(n,Bt.email,r.message,t)}break;case"url":Vt(n,"uri",r.message,t);break;case"uuid":Vt(n,"uuid",r.message,t);break;case"regex":Je(n,r.regex,r.message,t);break;case"cuid":Je(n,Bt.cuid,r.message,t);break;case"cuid2":Je(n,Bt.cuid2,r.message,t);break;case"startsWith":Je(n,RegExp(`^${pm(r.value,t)}`),r.message,t);break;case"endsWith":Je(n,RegExp(`${pm(r.value,t)}$`),r.message,t);break;case"datetime":Vt(n,"date-time",r.message,t);break;case"date":Vt(n,"date",r.message,t);break;case"time":Vt(n,"time",r.message,t);break;case"duration":Vt(n,"duration",r.message,t);break;case"length":n.minLength=typeof n.minLength=="number"?Math.max(n.minLength,r.value):r.value,n.maxLength=typeof n.maxLength=="number"?Math.min(n.maxLength,r.value):r.value;break;case"includes":Je(n,RegExp(pm(r.value,t)),r.message,t);break;case"ip":r.version!=="v6"&&Vt(n,"ipv4",r.message,t),r.version!=="v4"&&Vt(n,"ipv6",r.message,t);break;case"base64url":Je(n,Bt.base64url,r.message,t);break;case"jwt":Je(n,Bt.jwt,r.message,t);break;case"cidr":r.version!=="v6"&&Je(n,Bt.ipv4Cidr,r.message,t),r.version!=="v4"&&Je(n,Bt.ipv6Cidr,r.message,t);break;case"emoji":Je(n,Bt.emoji(),r.message,t);break;case"ulid":Je(n,Bt.ulid,r.message,t);break;case"base64":switch(t.base64Strategy){case"format:binary":Vt(n,"binary",r.message,t);break;case"contentEncoding:base64":n.contentEncoding="base64";break;case"pattern:zod":Je(n,Bt.base64,r.message,t)}break;case"nanoid":Je(n,Bt.nanoid,r.message,t)}return n}function pm(e,t){return t.patternStrategy==="escape"?YA(e):e}var FA=new Set("ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvxyz0123456789");function YA(e){let t="";for(let n=0;n<e.length;n++)FA.has(e[n])||(t+="\\"),t+=e[n];return t}function Vt(e,t,n,r){e.format||e.anyOf?.some(o=>o.format)?(e.anyOf||(e.anyOf=[]),e.format&&(e.anyOf.push({format:e.format}),delete e.format),e.anyOf.push({format:t,...n&&r.errorMessages&&{errorMessage:{format:n}}})):e.format=t}function Je(e,t,n,r){e.pattern||e.allOf?.some(o=>o.pattern)?(e.allOf||(e.allOf=[]),e.pattern&&(e.allOf.push({pattern:e.pattern}),delete e.pattern),e.allOf.push({pattern:Kx(t,r),...n&&r.errorMessages&&{errorMessage:{pattern:n}}})):e.pattern=Kx(t,r)}function Kx(e,t){if(!t.applyRegexFlags||!e.flags)return e.source;let n={i:e.flags.includes("i"),m:e.flags.includes("m"),s:e.flags.includes("s")},r=n.i?e.source.toLowerCase():e.source,o="",a=!1,i=!1,s=!1;for(let u=0;u<r.length;u++){if(a){o+=r[u],a=!1;continue}if(n.i){if(i){if(r[u].match(/[a-z]/)){s?(o+=r[u],o+=`${r[u-2]}-${r[u]}`.toUpperCase(),s=!1):r[u+1]==="-"&&r[u+2]?.match(/[a-z]/)?(o+=r[u],s=!0):o+=`${r[u]}${r[u].toUpperCase()}`;continue}}else if(r[u].match(/[a-z]/)){o+=`[${r[u]}${r[u].toUpperCase()}]`;continue}}if(n.m){if(r[u]==="^"){o+=`(^|(?<=[\r
+${w}`,p++;break;case"id":w.includes("\0")||(d=w);break;case"retry":/^\d+$/.test(w)?r(parseInt(w,10)):n(new Ui(`Invalid \`retry\` value: "${w}"`,{type:"invalid-retry",value:w,line:x}));break;default:n(new Ui(`Unknown field "${m.length>20?`${m.slice(0,20)}…`:m}"`,{type:"unknown-field",field:m,value:w,line:x}));break}}function v(){p>0&&t({id:d,event:f,data:l}),d=void 0,l="",p=0,f=void 0}function S(m={}){if(m.consume&&i.length>0){let w=i.join("");y(w,0,w.length)}u=!0,d=void 0,l="",p=0,f=void 0,i.length=0,s=0,h=!1}return{feed:b,reset:S}}function Bx(e,t,n){return n===100&&e.charCodeAt(t+1)===97&&e.charCodeAt(t+2)===116&&e.charCodeAt(t+3)===97&&e.charCodeAt(t+4)===58}function Vx(e,t,n){return n===101&&e.charCodeAt(t+1)===118&&e.charCodeAt(t+2)===101&&e.charCodeAt(t+3)===110&&e.charCodeAt(t+4)===116&&e.charCodeAt(t+5)===58}var Zi=class extends TransformStream{constructor({onError:t,onRetry:n,onComment:r,maxBufferSize:o}={}){let a;super({start(i){a=Hx({onEvent:s=>{i.enqueue(s)},onError(s){typeof t=="function"&&t(s),(t==="terminate"||s.type==="max-buffer-size-exceeded")&&i.error(s)},onRetry:n,onComment:r,maxBufferSize:o})},transform(i){a.feed(i)}})}};var hk=new TextDecoder;var{btoa:gk,atob:yk}=globalThis;function Qx(e=globalThis){return e.navigator?.userAgent?e.navigator.userAgent.toLowerCase():e.process?.versions?.node?`node.js/${e.process.version}`:e.EdgeRuntime?"vercel-edge":""}function dr(e){if(e==null)return{};let t={};if(e instanceof Headers)e.forEach((n,r)=>{t[r.toLowerCase()]=n});else{Array.isArray(e)||(e=Object.entries(e));for(let[n,r]of e)r!=null&&(t[n.toLowerCase()]=r)}return t}function Wx(e,...t){let n=new Headers(dr(e)),r=n.get("user-agent")||"";return n.set("user-agent",[r,...t].filter(Boolean).join(" ")),Object.fromEntries(n.entries())}var mA=[{mediaType:"audio/aac",bytesPrefix:[255,240]},{mediaType:"audio/aac",bytesPrefix:[255,241]},{mediaType:"audio/aac",bytesPrefix:[255,248]},{mediaType:"audio/aac",bytesPrefix:[255,249]},{mediaType:"audio/mpeg",bytesPrefix:[255,251]},{mediaType:"audio/mpeg",bytesPrefix:[255,250]},{mediaType:"audio/mpeg",bytesPrefix:[255,243]},{mediaType:"audio/mpeg",bytesPrefix:[255,242]},{mediaType:"audio/mpeg",bytesPrefix:[255,227]},{mediaType:"audio/mpeg",bytesPrefix:[255,226]},{mediaType:"audio/wav",bytesPrefix:[82,73,70,70,null,null,null,null,87,65,86,69]},{mediaType:"audio/ogg",bytesPrefix:[79,103,103,83]},{mediaType:"audio/flac",bytesPrefix:[102,76,97,67]},{mediaType:"audio/aac",bytesPrefix:[64,21,0,0]},{mediaType:"audio/webm",bytesPrefix:[26,69,223,163]}],vk=[...mA,{mediaType:"audio/mp4",bytesPrefix:[0,0,0,null,102,116,121,112]}];async function yu(e){try{await e.body?.cancel()}catch{}}var eE="AI_DownloadError",tE=`vercel.ai.error.${eE}`,hA=Symbol.for(tE),qe=class extends he{constructor({url:e,statusCode:t,statusText:n,cause:r,message:o=r==null?`Failed to download ${e}: ${t} ${n}`:`Failed to download ${e}: ${r}`}){super({name:eE,message:o,cause:r}),this[hA]=!0,this.url=e,this.statusCode=t,this.statusText=n}static isInstance(e){return he.hasMarker(e,tE)}};function gA(e=globalThis){return e.window!=null}function mm(e,t){try{return new URL(e).origin===new URL(t).origin}catch{return!1}}function yA(e){let t;try{t=new URL(e)}catch{throw new qe({url:e,message:`Invalid URL: ${e}`})}if(t.protocol==="data:")return;if(t.protocol!=="http:"&&t.protocol!=="https:")throw new qe({url:e,message:`URL scheme must be http, https, or data, got ${t.protocol}`});let n=t.hostname.toLowerCase().replace(/\.+$/,"");if(!n)throw new qe({url:e,message:"URL must have a hostname"});if(n==="localhost"||n.endsWith(".local")||n.endsWith(".localhost"))throw new qe({url:e,message:`URL with hostname ${n} is not allowed`});if(n.startsWith("[")&&n.endsWith("]")){if(nE(n.slice(1,-1)))throw new qe({url:e,message:`URL with IPv6 address ${n} is not allowed`});return}if(ym(n)&&vm(n))throw new qe({url:e,message:`URL with IP address ${n} is not allowed`})}function vA({address:e,family:t,hostname:n}){if(t===4?!ym(e)||vm(e):t!==6||nE(e))throw new qe({url:n,message:`Hostname ${n} resolved to disallowed IP address ${e}`})}function ym(e){let t=e.split(".");return t.length!==4?!1:t.every(n=>{let r=Number(n);return Number.isInteger(r)&&r>=0&&r<=255&&String(r)===n})}function vm(e){let[t,n,r]=e.split(".").map(Number);return t===0||t===10||t===100&&n>=64&&n<=127||t===127||t===169&&n===254||t===172&&n>=16&&n<=31||t===192&&n===0&&r===0||t===192&&n===0&&r===2||t===192&&n===168||t===198&&(n===18||n===19)||t===198&&n===51&&r===100||t===203&&n===0&&r===113||t>=224}function bA(e){let t=e.toLowerCase(),n=t.indexOf("%");n!==-1&&(t=t.slice(0,n));let r=t.split("::");if(r.length>2)return null;let o=i=>{if(i==="")return[];let s=[],u=i.split(":");for(let d=0;d<u.length;d++){let l=u[d];if(l.includes(".")){if(d!==u.length-1||!ym(l))return null;let[p,f,h,b]=l.split(".").map(Number);s.push(p<<8|f,h<<8|b);continue}if(!/^[0-9a-f]{1,4}$/.test(l))return null;s.push(parseInt(l,16))}return s},a=o(r[0]);if(a===null)return null;if(r.length===2){let i=o(r[1]);if(i===null)return null;let s=8-a.length-i.length;return s<0?null:[...a,...new Array(s).fill(0),...i]}return a.length===8?a:null}function nE(e){let t=bA(e);if(t===null)return!0;let n=r=>t.slice(0,r).every(o=>o===0);return n(7)&&(t[7]===0||t[7]===1)||(t[0]&65024)===64512||(t[0]&65472)===65152||(t[0]&65472)===65216||(t[0]&65280)===65280||t[0]===8193&&t[1]===3512||t[0]===16383&&(t[1]&61440)===0?!0:n(6)||n(5)&&t[5]===65535||n(4)&&t[4]===65535&&t[5]===0||t[0]===100&&t[1]===65435&&t[2]===0&&t[3]===0&&t[4]===0&&t[5]===0||t[0]===100&&t[1]===65435&&t[2]===1?vm(`${t[6]>>8&255}.${t[6]&255}.${t[7]>>8&255}.${t[7]&255}`):!1}function wA(e){return((t,n,r)=>{e(t,{...n,all:!0},(o,a)=>{if(o){r(o);return}try{let[i]=a;if(i==null)throw new Error(`Hostname ${t} did not resolve to an address`);for(let{address:s,family:u}of a)vA({address:s,family:u,hostname:t});n.all===!0?r(null,a):r(null,i.address,i.family)}catch(i){r(i instanceof Error?i:new Error(String(i)))}})})}var Gx;function SA(){let e=globalThis.process;return e?.release?.name==="node"&&e.versions?.bun==null&&e.versions?.deno==null&&e.title!=="workerd"&&globalThis.EdgeRuntime==null}async function TA(){return SA()?Gx??(Gx=Promise.resolve().then(xA)):globalThis.fetch}function xA(){let e=Fx("node:module"),{lookup:t}=Fx("node:dns"),{Agent:n,fetch:r}=e.createRequire(rE())("undici"),o=new n({connect:{lookup:wA(t)}});return((a,i)=>r(a,{...i,dispatcher:o}))}function Fx(e){let t=globalThis.process?.getBuiltinModule?.(e);if(t==null)throw new Error(`Node.js built-in module ${e} is unavailable`);return t}function rE(){let e=Error.prepareStackTrace;try{Error.prepareStackTrace=(o,a)=>a;let t=new Error("Capture current module path");Error.captureStackTrace(t,rE);let[n]=t.stack,r=n?.getFileName();if(r==null)throw new Error("Unable to determine the current module path");return r}finally{Error.prepareStackTrace=e}}var EA=["connection","keep-alive","te","trailer","transfer-encoding","upgrade","host","forwarded","proxy-authorization","via","x-forwarded-for","x-forwarded-host","x-forwarded-proto","x-real-ip","metadata","metadata-flavor","x-aws-ec2-metadata-token","x-metadata-token","cookie","set-cookie"];function oE(e){let t=new Headers(e);for(let n of EA)t.delete(n);return t}var _A=10,MA=new Set([301,302,303,307,308]);async function CA(e){return e==null||e===globalThis.fetch?await TA():e}async function IA({url:e,headers:t,abortSignal:n,maxRedirects:r=_A,fetch:o,trustedOrigin:a}){let i=t===void 0?void 0:oE(t),s=d=>{let l={signal:n,redirect:d};return i!==void 0&&(l.headers=new Headers(i)),l},u=e;for(let d=0;d<=r;d++){let l=a!==void 0&&mm(u,a);l||yA(u);let p=l&&o!=null?o:l?globalThis.fetch:await CA(o),f=await p(u,s("manual"));if(f.type==="opaqueredirect"){if(!gA())throw new qe({url:e,message:`Redirect from ${u} could not be validated and was blocked`});return await p(u,s("follow"))}let h=f.headers?.get("location");if(MA.has(f.status)&&h){yu(f);let b=new URL(h,u).toString();if(i!==void 0&&!mm(b,u)){let T=i.get("user-agent");i=new Headers(T==null?void 0:{"user-agent":T})}u=b;continue}return f}throw new qe({url:e,message:`Too many redirects (max ${r})`})}var RA=new Set(["accept","accept-language","baggage","cache-control","idempotency-key","if-match","if-modified-since","if-none-match","if-range","if-unmodified-since","pragma","range","traceparent","tracestate","user-agent","x-correlation-id","x-request-id"]);async function aE({headers:e,credentialedOrigin:t,untrustedFirstHopHeaders:n,...r}){let o;if(e!==void 0){o=oE(e);let a=t??r.trustedOrigin;if(a===void 0||!mm(r.url,a)){let i=new Set([...RA,...(n??[]).map(s=>s.toLowerCase())]);o=new Headers([...o].filter(([s])=>i.has(s)))}}return IA({...r,headers:o})}var bm=2147483648;async function iE({response:e,url:t,maxBytes:n=bm}){let r=e.headers.get("content-length");if(r!=null){let l=parseInt(r,10);if(!isNaN(l)&&l>n)throw await yu(e),new qe({url:t,message:`Download of ${t} exceeded maximum size of ${n} bytes (Content-Length: ${l}).`})}let o=e.body;if(o==null)return new Uint8Array(0);let a=o.getReader(),i=[],s=0;try{for(;;){let{done:l,value:p}=await a.read();if(l)break;if(s+=p.length,s>n)throw new qe({url:t,message:`Download of ${t} exceeded maximum size of ${n} bytes.`});i.push(p.byteLength<p.buffer.byteLength?new Uint8Array(p):p)}}finally{try{await a.cancel()}catch{}finally{a.releaseLock()}}let u=new Uint8Array(s),d=0;for(let l of i)u.set(l,d),d+=l.length;return u}var Ie=({prefix:e,size:t=16,alphabet:n="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",separator:r="-"}={})=>{let o=()=>{let a=n.length,i=new Array(t);for(let s=0;s<t;s++)i[s]=n[Math.random()*a|0];return i.join("")};if(e==null)return o;if(n.includes(r))throw new cm({argument:"separator",message:`The separator "${r}" must not be part of the alphabet "${n}".`});return()=>`${e}${r}${o()}`},wm=Ie();function sE(e){return globalThis.Buffer?.isBuffer(e)??!1}var AA=/"(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])"\s*:/,OA=/"(?:c|\\u0063)(?:o|\\u006[Ff])(?:n|\\u006[Ee])(?:s|\\u0073)(?:t|\\u0074)(?:r|\\u0072)(?:u|\\u0075)(?:c|\\u0063)(?:t|\\u0074)(?:o|\\u006[Ff])(?:r|\\u0072)"\s*:/;function Yx(e){let t=JSON.parse(e);return t===null||typeof t!="object"||AA.test(e)===!1&&OA.test(e)===!1?t:zA(t)}function zA(e){let t=[e];for(;t.length;){let n=t;t=[];for(let r of n){if(Object.prototype.hasOwnProperty.call(r,"__proto__"))throw new SyntaxError("Object contains forbidden prototype property");if(Object.prototype.hasOwnProperty.call(r,"constructor")&&r.constructor!==null&&typeof r.constructor=="object"&&Object.prototype.hasOwnProperty.call(r.constructor,"prototype"))throw new SyntaxError("Object contains forbidden prototype property");for(let o in r){let a=r[o];a&&typeof a=="object"&&t.push(a)}}}return e}function NA(e){let{stackTraceLimit:t}=Error;try{Error.stackTraceLimit=0}catch{return Yx(e)}try{return Yx(e)}finally{Error.stackTraceLimit=t}}function Sm(e){if(e.type==="object"||Array.isArray(e.type)&&e.type.includes("object")){let{additionalProperties:n}=e;e.additionalProperties=n!=null&&typeof n!="boolean"?cr(n):!1;let{properties:r}=e;if(r!=null)for(let o of Object.keys(r))r[o]=cr(r[o])}e.items!=null&&(e.items=Array.isArray(e.items)?e.items.map(cr):cr(e.items)),e.anyOf!=null&&(e.anyOf=e.anyOf.map(cr)),e.allOf!=null&&(e.allOf=e.allOf.map(cr)),e.oneOf!=null&&(e.oneOf=e.oneOf.map(cr));let{definitions:t}=e;if(t!=null)for(let n of Object.keys(t))t[n]=cr(t[n]);return e}function cr(e){return typeof e=="boolean"?e:Sm(e)}var DA=Symbol("Let zodToJsonSchema decide on which parser to use"),Jx={name:void 0,$refStrategy:"root",basePath:["#"],effectStrategy:"input",pipeStrategy:"all",dateStrategy:"format:date-time",mapStrategy:"entries",removeAdditionalStrategy:"passthrough",allowedAdditionalProperties:!0,rejectedAdditionalProperties:!1,definitionPath:"definitions",strictUnions:!1,definitions:{},errorMessages:!1,patternStrategy:"escape",applyRegexFlags:!1,emailStrategy:"format:email",base64Strategy:"contentEncoding:base64",nameStrategy:"ref"},$A=e=>typeof e=="string"?{...Jx,name:e}:{...Jx,...e};function bt(){return{}}function kA(e,t){let n={type:"array"};return e.type?._def&&e.type?._def?.typeName!=="ZodAny"&&(n.items=Y(e.type._def,{...t,currentPath:[...t.currentPath,"items"]})),e.minLength&&(n.minItems=e.minLength.value),e.maxLength&&(n.maxItems=e.maxLength.value),e.exactLength&&(n.minItems=e.exactLength.value,n.maxItems=e.exactLength.value),n}function PA(e){let t={type:"integer",format:"int64"};if(!e.checks)return t;for(let n of e.checks)switch(n.kind){case"min":n.inclusive?t.minimum=n.value:t.exclusiveMinimum=n.value;break;case"max":n.inclusive?t.maximum=n.value:t.exclusiveMaximum=n.value;break;case"multipleOf":t.multipleOf=n.value}return t}function jA(){return{type:"boolean"}}function lE(e,t){return Y(e.type._def,t)}var UA=(e,t)=>Y(e.innerType._def,t);function uE(e,t,n){let r=n??t.dateStrategy;if(Array.isArray(r))return{anyOf:r.map(o=>uE(e,t,o))};switch(r){case"string":case"format:date-time":return{type:"string",format:"date-time"};case"format:date":return{type:"string",format:"date"};case"integer":return ZA(e)}}var ZA=e=>{let t={type:"integer",format:"unix-time"};for(let n of e.checks)switch(n.kind){case"min":t.minimum=n.value;break;case"max":t.maximum=n.value}return t};function LA(e,t){return{...Y(e.innerType._def,t),default:e.defaultValue()}}function qA(e,t){return t.effectStrategy==="input"?Y(e.schema._def,t):bt()}function BA(e){return{type:"string",enum:Array.from(e.values)}}var VA=e=>"type"in e&&e.type==="string"?!1:"allOf"in e;function HA(e,t){let n=[Y(e.left._def,{...t,currentPath:[...t.currentPath,"allOf","0"]}),Y(e.right._def,{...t,currentPath:[...t.currentPath,"allOf","1"]})].filter(o=>!!o),r=[];return n.forEach(o=>{if(VA(o))r.push(...o.allOf);else{let a=o;if("additionalProperties"in o&&o.additionalProperties===!1){let{additionalProperties:i,...s}=o;a=s}r.push(a)}}),r.length?{allOf:r}:void 0}function GA(e){let t=typeof e.value;return t!=="bigint"&&t!=="number"&&t!=="boolean"&&t!=="string"?{type:Array.isArray(e.value)?"array":"object"}:{type:t==="bigint"?"integer":t,const:e.value}}var fm,Bt={cuid:/^[cC][^\s-]{8,}$/,cuid2:/^[0-9a-z]+$/,ulid:/^[0-9A-HJKMNP-TV-Z]{26}$/,email:/^(?!\.)(?!.*\.\.)([a-zA-Z0-9_'+\-.]*)[a-zA-Z0-9_+-]@([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/,emoji:()=>(fm===void 0&&(fm=RegExp("^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$","u")),fm),uuid:/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/,ipv4:/^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/,ipv4Cidr:/^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/(3[0-2]|[12]?[0-9])$/,ipv6:/^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/,ipv6Cidr:/^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/,base64:/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/,base64url:/^([0-9a-zA-Z-_]{4})*(([0-9a-zA-Z-_]{2}(==)?)|([0-9a-zA-Z-_]{3}(=)?))?$/,nanoid:/^[a-zA-Z0-9_-]{21}$/,jwt:/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/};function cE(e,t){let n={type:"string"};if(e.checks)for(let r of e.checks)switch(r.kind){case"min":n.minLength=typeof n.minLength=="number"?Math.max(n.minLength,r.value):r.value;break;case"max":n.maxLength=typeof n.maxLength=="number"?Math.min(n.maxLength,r.value):r.value;break;case"email":switch(t.emailStrategy){case"format:email":Vt(n,"email",r.message,t);break;case"format:idn-email":Vt(n,"idn-email",r.message,t);break;case"pattern:zod":Je(n,Bt.email,r.message,t)}break;case"url":Vt(n,"uri",r.message,t);break;case"uuid":Vt(n,"uuid",r.message,t);break;case"regex":Je(n,r.regex,r.message,t);break;case"cuid":Je(n,Bt.cuid,r.message,t);break;case"cuid2":Je(n,Bt.cuid2,r.message,t);break;case"startsWith":Je(n,RegExp(`^${pm(r.value,t)}`),r.message,t);break;case"endsWith":Je(n,RegExp(`${pm(r.value,t)}$`),r.message,t);break;case"datetime":Vt(n,"date-time",r.message,t);break;case"date":Vt(n,"date",r.message,t);break;case"time":Vt(n,"time",r.message,t);break;case"duration":Vt(n,"duration",r.message,t);break;case"length":n.minLength=typeof n.minLength=="number"?Math.max(n.minLength,r.value):r.value,n.maxLength=typeof n.maxLength=="number"?Math.min(n.maxLength,r.value):r.value;break;case"includes":Je(n,RegExp(pm(r.value,t)),r.message,t);break;case"ip":r.version!=="v6"&&Vt(n,"ipv4",r.message,t),r.version!=="v4"&&Vt(n,"ipv6",r.message,t);break;case"base64url":Je(n,Bt.base64url,r.message,t);break;case"jwt":Je(n,Bt.jwt,r.message,t);break;case"cidr":r.version!=="v6"&&Je(n,Bt.ipv4Cidr,r.message,t),r.version!=="v4"&&Je(n,Bt.ipv6Cidr,r.message,t);break;case"emoji":Je(n,Bt.emoji(),r.message,t);break;case"ulid":Je(n,Bt.ulid,r.message,t);break;case"base64":switch(t.base64Strategy){case"format:binary":Vt(n,"binary",r.message,t);break;case"contentEncoding:base64":n.contentEncoding="base64";break;case"pattern:zod":Je(n,Bt.base64,r.message,t)}break;case"nanoid":Je(n,Bt.nanoid,r.message,t)}return n}function pm(e,t){return t.patternStrategy==="escape"?YA(e):e}var FA=new Set("ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvxyz0123456789");function YA(e){let t="";for(let n=0;n<e.length;n++)FA.has(e[n])||(t+="\\"),t+=e[n];return t}function Vt(e,t,n,r){e.format||e.anyOf?.some(o=>o.format)?(e.anyOf||(e.anyOf=[]),e.format&&(e.anyOf.push({format:e.format}),delete e.format),e.anyOf.push({format:t,...n&&r.errorMessages&&{errorMessage:{format:n}}})):e.format=t}function Je(e,t,n,r){e.pattern||e.allOf?.some(o=>o.pattern)?(e.allOf||(e.allOf=[]),e.pattern&&(e.allOf.push({pattern:e.pattern}),delete e.pattern),e.allOf.push({pattern:Kx(t,r),...n&&r.errorMessages&&{errorMessage:{pattern:n}}})):e.pattern=Kx(t,r)}function Kx(e,t){if(!t.applyRegexFlags||!e.flags)return e.source;let n={i:e.flags.includes("i"),m:e.flags.includes("m"),s:e.flags.includes("s")},r=n.i?e.source.toLowerCase():e.source,o="",a=!1,i=!1,s=!1;for(let u=0;u<r.length;u++){if(a){o+=r[u],a=!1;continue}if(n.i){if(i){if(r[u].match(/[a-z]/)){s?(o+=r[u],o+=`${r[u-2]}-${r[u]}`.toUpperCase(),s=!1):r[u+1]==="-"&&r[u+2]?.match(/[a-z]/)?(o+=r[u],s=!0):o+=`${r[u]}${r[u].toUpperCase()}`;continue}}else if(r[u].match(/[a-z]/)){o+=`[${r[u]}${r[u].toUpperCase()}]`;continue}}if(n.m){if(r[u]==="^"){o+=`(^|(?<=[\r
 ]))`;continue}else if(r[u]==="$"){o+=`($|(?=[\r
 ]))`;continue}}if(n.s&&r[u]==="."){o+=i?`${r[u]}\r
 `:`[${r[u]}\r
@@ -2523,8 +2523,8 @@ SOFTWARE.
   }
 
   function account(login) {
-    return '<p class="muted small account">Signed in with GitHub as <b>' + esc(login) + "</b> Â· " +
-      '<button type="button" class="btn link" data-keep-signout="1">Sign out</button> Â· ' +
+    return '<p class="muted small account">Signed in with GitHub as <b>' + esc(login) + "</b> · " +
+      '<button type="button" class="btn link" data-keep-signout="1">Sign out</button> · ' +
       '<button type="button" class="btn link" data-keep-delete-ask="1">Delete me and my ideas</button></p>';
   }
 
@@ -2544,11 +2544,11 @@ SOFTWARE.
         '<div class="keep-acts"><button type="button" class="btn primary" data-keep-save="' + id + '">Keep this idea</button></div>' + account(v.login) + "</div>";
     }
     if (v.kind === "kept") {
-      return '<div class="keep kept" role="status"><p class="seal-line"><span class="seal" aria-hidden="true">â</span><b>Kept.</b> Here when you come back.</p>' +
+      return '<div class="keep kept" role="status"><p class="seal-line"><span class="seal" aria-hidden="true">✓</span><b>Kept.</b> Here when you come back.</p>' +
         (v.login ? account(v.login) : "") + "</div>";
     }
     if (v.kind === "linked") {
-      return '<div class="keep kept" role="status"><p class="seal-line"><span class="seal" aria-hidden="true">â</span><b>Kept under a private link.</b></p>' +
+      return '<div class="keep kept" role="status"><p class="seal-line"><span class="seal" aria-hidden="true">✓</span><b>Kept under a private link.</b></p>' +
         '<p><label class="sr" for="keep-url">Your private link</label><input id="keep-url" class="keep-url" type="text" readonly value="' + esc(v.url) + '"></p>' +
         '<div class="keep-acts"><button type="button" class="btn primary" data-keep-copy="1">Copy the link</button>' +
         '<button type="button" class="btn ghost" data-keep-unlink="' + esc(v.id) + '">Delete this link</button></div>' +
@@ -2957,7 +2957,7 @@ SOFTWARE.
 
   // ---------------- small pieces ----------------
   function pill(st) {
-    var icon = { neutral: "â", active: "â", owner: "â", wait: "â¸", bad: "â ", good: "â", killed: "â" }[st.tone] || "";
+    var icon = { neutral: "○", active: "◔", owner: "⚑", wait: "⏸", bad: "⚠", good: "✓", killed: "✕" }[st.tone] || "";
     return '<span class="pill ' + esc(st.tone) + '"><span aria-hidden="true">' + icon + "</span>" + esc(st.label) + "</span>";
   }
 
@@ -2973,7 +2973,7 @@ SOFTWARE.
   var FLAG_KINDS = ["ESCALATE", "ASK_OWNER_DIGEST"];
   // Button words: [yes, no, after yes, after no]. A flag asks you to take something on, not to "approve" it.
   function words(kind) {
-    return FLAG_KINDS.indexOf(kind) >= 0 ? ["Iâll decide", "Not needed", "You took this on", "You dismissed this"]
+    return FLAG_KINDS.indexOf(kind) >= 0 ? ["I’ll decide", "Not needed", "You took this on", "You dismissed this"]
       : ["Approve", "Reject", "You approved this", "You rejected this"];
   }
   // `shared` holds suggestion sentences already said once under the section heading (see sharedTexts): a card then
@@ -2983,7 +2983,7 @@ SOFTWARE.
     if (!open.length) return compact ? "" : '<p class="muted small">The referee has no suggestion for this one right now.</p>';
     return '<ul class="sugs">' + open.map(function (s) {
       var decided = s.decision
-        ? '<span class="decided ' + esc(s.decision.choice) + '">' + (s.decision.choice === "approved" ? "â " + words(s.kind)[2] : "â " + words(s.kind)[3]) +
+        ? '<span class="decided ' + esc(s.decision.choice) + '">' + (s.decision.choice === "approved" ? "✓ " + words(s.kind)[2] : "✕ " + words(s.kind)[3]) +
           "</span> <span class=\"muted small\">Nothing was run.</span>" +
           ' <button class="btn link" data-redo="' + esc(s.id) + '">Change</button>'
         : "";
@@ -2997,7 +2997,7 @@ SOFTWARE.
       // Its receipt (U1): the accepted update that carried it, or the named rule that raised it.
       var receipt = (s.sources || []).length ? '<details class="receipt-open sug-receipt"><summary>Receipt</summary><div class="receipt">' +
         P.receiptHtml(s.sources.map(function (src) {
-          return src.kind === "audit" ? ["From the record", src.label + (src.at ? " Â· " + P.stamp(src.at) : ""), src.ref] : ["From a rule", src.label, src.ref];
+          return src.kind === "audit" ? ["From the record", src.label + (src.at ? " · " + P.stamp(src.at) : ""), src.ref] : ["From a rule", src.label, src.ref];
         })) + "</div></details>" : "";
       return '<li class="sug" data-sug="' + esc(s.id) + '"><div class="what">' + esc(main) + "</div>" +
         (hoisted ? "" : '<div class="why">Why: ' + esc(s.because) + "</div>") + receipt +
@@ -3022,7 +3022,7 @@ SOFTWARE.
   // suggestion's Approve and Reject only record the choice (engine.decide: "Nothing is executed, ever"), and an answer is recorded on the idea and sent
   // nowhere; the app has no paid step and no outside effect to charge for.
   var COST_ANSWER = '<b class="mono">Free.</b> Your choice is recorded on the idea; nothing is charged or sent.';
-  var COST_SUGGESTION = '<span class="cost-tag"><b class="mono">Free</b> Â· records your answer only</span>';
+  var COST_SUGGESTION = '<span class="cost-tag"><b class="mono">Free</b> · records your answer only</span>';
 
   function decisionBlock(item) {
     var d = item.decision;
@@ -3037,9 +3037,9 @@ SOFTWARE.
   // Tone is never carried by colour alone: each one has a mark you can see and a word a screen
   // reader says. "Unknown" is its own tone on purpose: missing evidence is never a pass.
   var TONES = {
-    good: { mark: "â", word: "Checked" }, bad: { mark: "â ", word: "Not proven" },
-    unknown: { mark: "?", word: "Unknown" }, neutral: { mark: "â¢", word: "On record" },
-    killed: { mark: "â", word: "Stopped" }, todo: { mark: "â", word: "Not started" }
+    good: { mark: "✓", word: "Checked" }, bad: { mark: "⚠", word: "Not proven" },
+    unknown: { mark: "?", word: "Unknown" }, neutral: { mark: "•", word: "On record" },
+    killed: { mark: "✕", word: "Stopped" }, todo: { mark: "○", word: "Not started" }
   };
 
   function mark(tone) {
@@ -3051,7 +3051,7 @@ SOFTWARE.
     if (!list || !list.length) return "";
     return '<p class="t-refs">' + list.map(function (r) {
       return esc(r.label) + ' <span class="ref">' + esc(r.ref) + "</span>";
-    }).join(" Â· ") + "</p>";
+    }).join(" · ") + "</p>";
   }
 
   function trail(p) {
@@ -3095,7 +3095,7 @@ SOFTWARE.
     if (item.owner_now) rows.push(["Who holds it now", esc(item.owner_now)]);
     if (item.killed) rows.push(["Why it stopped", (item.killed.reason ? esc(item.killed.reason) : '<span class="muted">No reason on record.</span>') +
       ' <span class="muted">(' + esc(item.killed.how) + (item.killed.by === "You (owner)" ? "" : ", " + esc(item.killed.by)) + ")</span>"]);
-    if (item.terminal) rows.push(["Final result", esc(item.terminal.label) + " Â· confirmed by " + esc(item.terminal.by)]);
+    if (item.terminal) rows.push(["Final result", esc(item.terminal.label) + " · confirmed by " + esc(item.terminal.by)]);
     return '<dl class="facts">' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl>";
   }
 
@@ -3115,12 +3115,12 @@ SOFTWARE.
     opts = opts || {};
     var more = opts.flaggedOnly ? item.suggestions.length - suggestionList.count(item) : 0;
     var title = opts.compact
-      ? '<a class="card-link" href="#' + (item.check ? "run/" : "idea/") + esc(item.id) + '">' + esc(item.title) + '<span class="go" aria-hidden="true"> âº</span></a>'
+      ? '<a class="card-link" href="#' + (item.check ? "run/" : "idea/") + esc(item.id) + '">' + esc(item.title) + '<span class="go" aria-hidden="true"> ›</span></a>'
       : esc(item.title);
     return '<article class="card' + (item.needs_owner ? " owner" : "") + '" id="idea-' + esc(item.id) + '">' +
       '<div class="card-head"><h3>' + title + "</h3>" + pill(item.state) + "</div>" +
       '<div class="meta"><span class="stage">' + esc(item.phase.label) + " stage</span>" +
-      (item.consumer ? '<span class="stage">Â· for the public</span>' : "") + "</div>" +
+      (item.consumer ? '<span class="stage">· for the public</span>' : "") + "</div>" +
       "<p>" + esc(item.summary) + "</p>" +
       // When something is waiting on you, your question comes first; the proof sits under it.
       decisionBlock(item) +
@@ -3131,7 +3131,7 @@ SOFTWARE.
       (opts.compact
         ? (more ? '<p class="muted small more">' + more + (more === 1 ? " more suggestion" : " more suggestions") + " in the details.</p>" : "")
         : facts(item) + stopRow(item) +
-          (STATIC ? "" : '<details class="tech" data-raw="' + esc(item.id) + '"><summary>Technical detail</summary><pre>Loadingâ¦</pre></details>')) +
+          (STATIC ? "" : '<details class="tech" data-raw="' + esc(item.id) + '"><summary>Technical detail</summary><pre>Loading…</pre></details>')) +
       "</article>";
   }
 
@@ -3168,7 +3168,7 @@ SOFTWARE.
     var areas = state && state.covers || [];
     if (!areas.length) return "";
     return '<div class="covers" id="covers"><p class="muted small">Today the first check knows ' + areas.length + (areas.length === 1 ? " area" : " areas") +
-      ". Any other idea gets an honest âcanât judge this one yetâ. The agents are a script played through the real referee: no AI model or web search runs yet.</p>" +
+      ". Any other idea gets an honest “can’t judge this one yet”. The agents are a script played through the real referee: no AI model or web search runs yet.</p>" +
       '<details class="covers-list"><summary class="small">Which areas</summary><ul class="plain small">' +
       areas.map(function (a) { return "<li>" + esc(a.charAt(0).toUpperCase() + a.slice(1)) + "</li>"; }).join("") + "</ul></details></div>";
   }
@@ -3224,9 +3224,9 @@ SOFTWARE.
     return '<article class="card check" id="first-check"><p class="eyebrow">First check</p>' +
       '<p class="verdict">' + esc(c.verdict) + "</p>" +
       // The Referee says the answer in its own voice (dynamic presence slice C): who is speaking, then the line.
-      (c.voice ? '<p class="voice-line"><span class="voice-who"><b>' + esc(c.voice.name) + "</b> Â· " + esc(c.voice.role) + '</span> <span class="voice-say">' + esc(c.voice.text) + "</span></p>" : "") +
+      (c.voice ? '<p class="voice-line"><span class="voice-who"><b>' + esc(c.voice.name) + "</b> · " + esc(c.voice.role) + '</span> <span class="voice-say">' + esc(c.voice.text) + "</span></p>" : "") +
       '<div class="meter" role="img" aria-label="' + c.have + " of " + c.of + ' checks have evidence">' + seg + "</div>" +
-      '<p class="muted small">' + c.have + " of " + c.of + " checks have evidence Â· by " + esc(c.worker) + ", checked by " + esc(c.checker) + "</p>" +
+      '<p class="muted small">' + c.have + " of " + c.of + " checks have evidence · by " + esc(c.worker) + ", checked by " + esc(c.checker) + "</p>" +
       verdictReceipt(c) +
       '<details class="why"><summary><span>Why: ' + esc(c.why) + ' <span class="more">See evidence</span></span></summary><ul class="evidence">' + c.evidence.map(function (e) {
         return '<li class="' + (e.have ? "have" : "grey") + '"><span class="dot" aria-hidden="true"></span><span><b>' + esc(e.label) + "</b>" +
@@ -3239,7 +3239,7 @@ SOFTWARE.
       (state.launch && c.score !== null ? launchBlock(item) : K ? keepArea(item) :
       '<div class="stub"><button type="button" class="btn" id="build-stub" disabled aria-disabled="true" aria-describedby="build-note">Build the first slice</button>' +
       '<p class="muted small" id="build-note">Not switched on yet. It does nothing: it takes no email, keeps nothing and sends nothing, until the owner approves how a sign-up would be kept and the privacy wording.</p></div>') +
-      (mine ? '<div class="done" role="status"><span class="big-tick" aria-hidden="true">â</span><div><b>Recorded: ' + esc(mine.text) + ".</b>" +
+      (mine ? '<div class="done" role="status"><span class="big-tick" aria-hidden="true">✓</span><div><b>Recorded: ' + esc(mine.text) + ".</b>" +
         '<p class="muted small">Nothing was run. In a real studio the Research agent would start the free test next, and you would see it here.</p>' +
         '<a class="btn link" href="#today">Back to home</a></div></div>' : "") +
       "</article>";
@@ -3269,7 +3269,7 @@ SOFTWARE.
       if (!shown) return "Playing back " + total + " steps.";
       var who = lines[shown - 1].querySelector(".who");
       return "Playing back step " + shown + " of " + total + (who && who.textContent ? ": " + who.textContent : "") +
-        " Â· " + ((Date.now() - runStarted[id]) / 1000).toFixed(1) + " s";
+        " · " + ((Date.now() - runStarted[id]) / 1000).toFixed(1) + " s";
     }
     function paint() {
       lines.forEach(function (li, i) { li.hidden = i >= shown; });
@@ -3327,7 +3327,7 @@ SOFTWARE.
       // Answer first (consumer UX gate item 2): the verdict card, then what it rests on, then the steps as the receipt.
       // Echo (I2): the sentence the studio checked, with one tap back to Home to fix the wording. The check is done before
       // this page draws (answer first), so it says "Checked", never "Checking".
-      return '<p><a class="btn link" href="#today">â Home</a></p>' +
+      return '<p><a class="btn link" href="#today">← Home</a></p>' +
         '<p class="eyebrow">Checked</p><h1>' + esc(item.title) + "</h1>" +
         '<p class="echo-fix"><a class="btn link" href="#today" data-fix="' + esc(item.id) + '">Fix the wording</a></p>' +
         checkCard(item) +
@@ -3336,7 +3336,7 @@ SOFTWARE.
         (item.killed ? '<p class="stopped-note">' + mark("killed") + "Stopped for good. Reason: " +
           (item.killed.reason ? esc(String(item.killed.reason).replace(/[.!?\s]+$/, "")) : "none on record") + ". It is on the record.</p>" : "") +
         stopRow(item) +
-        '<p class="muted small demo-note">The checks above are real: they ran on your sentence against a small list the studio keeps, with competitor pages fetched on the date shown. Ratings are the studioâs opinion, not market data. The steps below are a script played through the real referee: the agents are stand-ins and no AI model ran.</p>' +
+        '<p class="muted small demo-note">The checks above are real: they ran on your sentence against a small list the studio keeps, with competitor pages fetched on the date shown. Ratings are the studio’s opinion, not market data. The steps below are a script played through the real referee: the agents are stand-ins and no AI model ran.</p>' +
         '<h2 class="h3" id="how-title" tabindex="-1">How it was checked</h2>' +
         // The plan shows before the steps play: 3 to 5 plain steps from this run's own record, and what it cost.
         P.block("plan_preview", { steps: P.planOf(lines.map(function (a) { return a.real ? "check" : a.event; })), cost: "free", go: false }).html +
@@ -3348,7 +3348,7 @@ SOFTWARE.
         }).join("") + "</ul>" +
         '<ol class="narration" id="narration" aria-label="What the agents did">' + lines.map(function (a) {
           return '<li data-word="' + esc(a.status_word) + '" class="' + (a.status === "REFUSED" ? "blocked" : "") + '"><span class="who">' + esc(a.who) +
-            '</span><span class="say">' + (a.status === "REFUSED" ? '<span aria-hidden="true">â </span>' : "") + esc(a.say) +
+            '</span><span class="say">' + (a.status === "REFUSED" ? '<span aria-hidden="true">⛔ </span>' : "") + esc(a.say) +
             (a.receipts && a.receipts.length ? '<span class="rcpts">' + a.receipts.map(function (r) { return '<span class="ref">' + esc(r) + "</span>"; }).join("") + "</span>" : "") + "</span></li>";
         }).join("") + "</ol>";
     },
@@ -3360,7 +3360,7 @@ SOFTWARE.
       var item = state.items.filter(function (v) { return v.id === id; })[0];
       if (!item) return '<p>That idea was not found. <a href="#ideas">See all ideas</a>.</p>';
       var hist = state.audit.filter(function (a) { return a.item === id; });
-      return '<p><a class="btn link" href="#ideas">â All ideas</a></p>' + ideaCard(item) +
+      return '<p><a class="btn link" href="#ideas">← All ideas</a></p>' + ideaCard(item) +
         "<h2>What happened</h2>" + timeline(hist, { oneIdea: true });
     },
     record: function () {
@@ -3392,9 +3392,9 @@ SOFTWARE.
         byKind[c.title].push(c);
       });
       return "<h1>Replays</h1>" +
-        '<p class="lead">The refereeâs own test scenarios, played step by step. Each one is a way agent teams go wrong, and what the referee does about it. ' +
+        '<p class="lead">The referee’s own test scenarios, played step by step. Each one is a way agent teams go wrong, and what the referee does about it. ' +
         "No real work happens: these are recorded scenarios.</p>" +
-        '<p class="muted small">Each heading is plain. The line under it is the scenario in the refereeâs own ' +
+        '<p class="muted small">Each heading is plain. The line under it is the scenario in the referee’s own ' +
         "words, taken from its test bank, so it reads technically. Open one and every step is in plain words.</p>" +
         order.map(function (kind) {
           var list = byKind[kind];
@@ -3410,13 +3410,13 @@ SOFTWARE.
       if (!play) return '<p>That replay was not found. <a href="#replays">All replays</a>.</p>';
       var i = replayStep[play.id] || 0;
       var f = play.frames[i];
-      return '<p><a class="btn link" href="#replays">â All replays</a></p><h1>' + esc(play.title) + "</h1>" +
+      return '<p><a class="btn link" href="#replays">← All replays</a></p><h1>' + esc(play.title) + "</h1>" +
         '<p class="muted small">Scenario: ' + esc(play.technical_title) + "</p>" +
-        '<p class="' + (play.passed ? "ok" : "warn") + '">' + (play.passed ? "â The referee behaved as expected in every step." :
-          "â The referee did not behave as expected: " + esc(play.failures.join("; "))) + "</p>" +
-        '<div class="player-nav"><button class="btn" data-step="-1"' + (i === 0 ? " disabled" : "") + '>â Back</button>' +
+        '<p class="' + (play.passed ? "ok" : "warn") + '">' + (play.passed ? "✓ The referee behaved as expected in every step." :
+          "✕ The referee did not behave as expected: " + esc(play.failures.join("; "))) + "</p>" +
+        '<div class="player-nav"><button class="btn" data-step="-1"' + (i === 0 ? " disabled" : "") + '>← Back</button>' +
         '<span class="step-count" aria-live="polite">Step ' + (i + 1) + " of " + play.frames.length + "</span>" +
-        '<button class="btn primary" data-step="1"' + (i >= play.frames.length - 1 ? " disabled" : "") + ">Next â</button></div>" +
+        '<button class="btn primary" data-step="1"' + (i >= play.frames.length - 1 ? " disabled" : "") + ">Next →</button></div>" +
         frame(f);
     },
     help: function () {
@@ -3429,7 +3429,7 @@ SOFTWARE.
         "<li><b>Every stopped idea keeps its reason on the record.</b></li></ul>" +
         // Replays left the tabs (UX recon item 4: fewer tabs at first); they live here, one tap away.
         '<p><a class="btn link" id="see-rules" href="#replays">See how the rules work</a></p>' +
-        '<p class="muted small">The refereeâs own test scenarios, played step by step: each is a way agent teams go wrong, and what the referee does about it.</p>' +
+        '<p class="muted small">The referee’s own test scenarios, played step by step: each is a way agent teams go wrong, and what the referee does about it.</p>' +
         "<h2>What this is not</h2><ul class=\"help\">" +
         "<li>It does not run agents, merge code, spend money or send messages.</li>" +
         "<li>It does not check who you are, so keep it on your own computer.</li>" +
@@ -3450,10 +3450,10 @@ SOFTWARE.
           : "<p>Nothing to flag.</p>") + "</article>";
     }
     var change = f.before && f.after && f.before.valid && f.after.valid && f.before.state && f.after.state
-      ? '<p class="change">' + pill(f.before.state) + '<span aria-hidden="true">â</span><span class="sr">then</span>' + pill(f.after.state) + "</p>" : "";
+      ? '<p class="change">' + pill(f.before.state) + '<span aria-hidden="true">→</span><span class="sr">then</span>' + pill(f.after.state) + "</p>" : "";
     return '<article class="card"><div class="card-head"><h3>' + esc(f.what) + "</h3>" +
       '<span class="res tone-' + (f.status === "REFUSED" ? "bad" : "neutral") + '">' + esc(f.result) + "</span></div>" +
-      '<p class="muted small">' + (f.who ? "By " + esc(f.who) + " Â· " : "") + esc(when(f.at)) + "</p>" +
+      '<p class="muted small">' + (f.who ? "By " + esc(f.who) + " · " : "") + esc(when(f.at)) + "</p>" +
       (f.why ? "<p><b>Why blocked:</b> " + esc(f.why) + "</p>" : "") + change +
       (f.suggested.length ? "<p><b>Referee suggests:</b></p><ul>" + f.suggested.map(function (s) {
         return "<li>" + esc(s.text) + (s.because ? ' <span class="muted">(' + esc(s.because) + ")</span>" : "") + "</li>"; }).join("") + "</ul>" : "") +
@@ -3471,7 +3471,7 @@ SOFTWARE.
       return '<li><div class="lr">' + glyph(g, g === "stopped" ? "Stopped: the referee refused it" : "Done: on the record") +
         '<div class="lr-name step-what">' + (withTitle ? "<b>" + esc(a.title) + "</b>: " : "") + esc(a.what) + "</div>" +
         '<span class="lr-res res tone-' + esc(a.tone || "neutral") + '">' + esc(a.result) + "</span>" +
-        '<span class="lr-who when">By ' + esc(a.who) + " Â· " + esc(when(a.at)) + "</span>" +
+        '<span class="lr-who when">By ' + esc(a.who) + " · " + esc(when(a.at)) + "</span>" +
         (more ? '<div class="lr-detail">' + more + "</div>" : "") + "</div></li>";
     }).join("") + "</ol>";
   }
@@ -3508,11 +3508,11 @@ SOFTWARE.
       var why = d.kind === "stop" ? (d.why ? "Reason: " + esc(d.why) : "No reason text on record.")
         : d.why ? (d.kind === "owner" ? esc(d.why) : "Why: " + esc(d.why)) : "No reason on record.";
       var res = d.kind === "owner" ? d.what + (d.refused ? " (the referee refused this)" : "") : d.what;
-      var ref = d.ref ? ' Â· <span class="ref">' + esc(d.ref) + "</span>" : "";
+      var ref = d.ref ? ' · <span class="ref">' + esc(d.ref) + "</span>" : "";
       return '<li class="' + (d.kind === "stop" ? "kill" : "decision d-" + esc(d.kind)) + '"><div class="lr">' + glyph(g, label) +
         '<div class="lr-name">' + name + '<p class="lr-sub">' + why + "</p></div>" +
         '<span class="lr-res">' + esc(res) + "</span>" +
-        '<span class="lr-who">' + (d.who === "You" ? "You" : "By " + esc(d.who)) + " Â· " + esc(when(d.at)) + ref + "</span></div></li>";
+        '<span class="lr-who">' + (d.who === "You" ? "You" : "By " + esc(d.who)) + " · " + esc(when(d.at)) + ref + "</span></div></li>";
     }).join("") + "</ol>";
   }
   function ownerLog(list) {
@@ -3524,7 +3524,7 @@ SOFTWARE.
       return '<li><div class="lr">' + glyph(refused ? "stopped" : "done", refused ? "Stopped: the referee refused this" : "Done: recorded") +
         '<div class="lr-name">' + (e.title ? "<b>" + esc(e.title) + "</b>: " : "") + esc(verb) + ": " + esc(e.text) + "</div>" +
         '<span class="lr-res">' + (refused ? '<span class="warn">the referee refused this</span>' : "recorded") + "</span>" +
-        '<span class="lr-who when">' + esc(when(e.at)) + " Â· nothing was run</span></div></li>";
+        '<span class="lr-who when">' + esc(when(e.at)) + " · nothing was run</span></div></li>";
     }).join("") + "</ol>";
   }
 
@@ -3543,7 +3543,7 @@ SOFTWARE.
     s = String(s == null ? "" : s).replace(SPACE, " ").replace(HIDDEN, "").replace(SPACE, " ").trim();
     limit = limit || 500;
     var cps = Array.from(s);
-    return cps.length <= limit ? s : cps.slice(0, Math.max(0, limit - 1)).join("").replace(/ +$/, "") + "â¦";
+    return cps.length <= limit ? s : cps.slice(0, Math.max(0, limit - 1)).join("").replace(/ +$/, "") + "…";
   }
   window.studioCleanText = cleanText;
 
@@ -3570,7 +3570,7 @@ SOFTWARE.
 
   function scoreWords(it) {
     var c = it.check;
-    if (c && c.score !== null && c.score !== undefined) return '<span class="rv-score"><b>' + esc(c.score) + "</b> out of 100 Â· confidence " + esc(c.conf) + "</span>";
+    if (c && c.score !== null && c.score !== undefined) return '<span class="rv-score"><b>' + esc(c.score) + "</b> out of 100 · confidence " + esc(c.conf) + "</span>";
     return '<span class="rv-score words">' + esc(c ? c.verdict : it.state.label) + "</span>";
   }
 
@@ -3579,7 +3579,7 @@ SOFTWARE.
     return '<a class="rv' + (on ? " on" : "") + '" href="#dashboard/' + esc(it.id) + '"' + (on ? ' aria-current="page"' : "") + ">" +
       '<span class="rv-name">' + esc(cleanText(it.title, 140)) + "</span>" +
       '<span class="rv-meta">' + mark(it.stages.ended ? "killed" : it.proof.tone) + esc(it.stages.label) + "</span>" +
-      '<span class="rv-line">' + scoreWords(it) + (n ? '<span class="rv-need">Needs you Â· ' + n + "</span>" : "") + "</span></a>";
+      '<span class="rv-line">' + scoreWords(it) + (n ? '<span class="rv-need">Needs you · ' + n + "</span>" : "") + "</span></a>";
   }
 
   function when2(iso) { return iso ? when(iso) : ""; }
@@ -3589,7 +3589,7 @@ SOFTWARE.
     if (!lines.length) return "";
     var last = lines[lines.length - 1], older = lines.slice(0, -1).slice(-7).reverse();
     return '<p class="label"><span class="dot" aria-hidden="true"></span> Live feed</p>' +
-      '<p class="feed-now" aria-live="polite"><b>' + esc(last.who) + "</b> Â· " + esc(last.text) + ' <span class="when">' + esc(when2(last.at)) + "</span></p>" +
+      '<p class="feed-now" aria-live="polite"><b>' + esc(last.who) + "</b> · " + esc(last.text) + ' <span class="when">' + esc(when2(last.at)) + "</span></p>" +
       (older.length ? '<details class="feed-more"><summary>Earlier actions (' + older.length + ")</summary><ol class=\"feed ruled\">" + older.map(function (l) {
         return '<li class="' + (l.tone === "flag" ? "is-block" : "") + '"><p class="who">' + esc(l.who) + ' <span class="when">' + esc(when2(l.at)) +
           '</span></p><p class="what">' + esc(l.text) + "</p></li>"; }).join("") + "</ol></details>" : "");
@@ -3597,7 +3597,7 @@ SOFTWARE.
 
   function costBlock(a) {
     return '<p class="label">Cost</p><p class="cost"><b>' + esc(a.cost_line) + "</b></p>" +
-      '<p class="muted small">' + esc(a.billing_words) + (a.may_cost ? " Where the figure comes from, in their words: â" + esc(a.basis) + "â." : "") + "</p>";
+      '<p class="muted small">' + esc(a.billing_words) + (a.may_cost ? " Where the figure comes from, in their words: “" + esc(a.basis) + "”." : "") + "</p>";
   }
 
   function apprActions(a, confirming) {
@@ -3635,10 +3635,10 @@ SOFTWARE.
 
   function apprCard(a) {
     var refsHtml = [a.target, a.repo, a.head].filter(Boolean).map(function (r) { return '<span class="ref">' + esc(r) + "</span>"; }).join(" ");
-    return '<article class="appr" data-card="' + esc(a.id) + '"><p class="label">' + esc(a.state_word) + " Â· " + esc(a.asked_by) + " asks</p>" +
+    return '<article class="appr" data-card="' + esc(a.id) + '"><p class="label">' + esc(a.state_word) + " · " + esc(a.asked_by) + " asks</p>" +
       '<h3 class="a-what">' + esc(a.what) + "</h3>" + (refsHtml ? '<p class="a-refs">' + refsHtml + "</p>" : "") +
       '<p class="label">Why</p><ul class="why-list">' + a.why.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>" +
-      '<blockquote class="said"><span class="label">What ' + esc(a.asked_by.toLowerCase()) + " wrote</span><p>â" + esc(a.summary) + "â</p></blockquote>" +
+      '<blockquote class="said"><span class="label">What ' + esc(a.asked_by.toLowerCase()) + " wrote</span><p>“" + esc(a.summary) + "”</p></blockquote>" +
       sureBlock(a.sure) +
       '<p class="label">If you change your mind</p>' +
       '<p class="rev ' + (a.final ? "no" : "yes") + '">' + mark(a.final ? "bad" : "good") + '<span class="rev-t">' + (a.final ? "" : "Reversible. ") + esc(a.undo) + "</span></p>" +
@@ -3649,7 +3649,7 @@ SOFTWARE.
 
   function pastCard(a) {
     return '<li class="past"><p>' + mark(a.state === "declined" || a.state === "expired" || a.state === "closed" || a.state === "failed" ? "unknown" : "good") +
-      "<b>" + esc(a.what) + "</b> Â· " + esc(a.state_word) + '</p><p class="muted small">' + esc(a.state_text) + " " + esc(a.cost_line) +
+      "<b>" + esc(a.what) + "</b> · " + esc(a.state_word) + '</p><p class="muted small">' + esc(a.state_text) + " " + esc(a.cost_line) +
       (a.expires_at ? " Your yes lasts until " + esc(when2(a.expires_at)) + "." : "") + "</p></li>";
   }
 
@@ -3659,7 +3659,7 @@ SOFTWARE.
     for (var i = 0; i < c.of; i++) seg += '<span class="seg' + (i < c.have ? " on" : "") + '"></span>';
     var judg = (c.narration || []).filter(function (l) { return l.key === "judg"; })[0];
     return '<div class="meter" role="img" aria-label="' + c.have + " of " + c.of + ' checks have evidence">' + seg + "</div>" +
-      '<p class="muted small">' + c.have + " of " + c.of + " checks have evidence Â· by " + esc(c.worker) + ", checked by " + esc(c.checker) + "</p>" +
+      '<p class="muted small">' + c.have + " of " + c.of + " checks have evidence · by " + esc(c.worker) + ", checked by " + esc(c.checker) + "</p>" +
       verdictReceipt(c) +
       '<ul class="evidence">' + c.evidence.map(function (e) {
         return '<li class="' + (e.have ? "have" : "grey") + '"><span class="dot" aria-hidden="true"></span><span><b>' + esc(e.label) + "</b>" +
@@ -3683,7 +3683,7 @@ SOFTWARE.
     return '<ol class="arc ruled">' + it.stages.list.map(function (st) {
       var head = mark(st.tone) + "<b>" + esc(st.label) + '</b> <span class="muted small">' + esc(statusWord(st)) + "</span>";
       var note = st.note ? '<p class="arc-note">' + esc(st.note) + "</p>" : "";
-      var refs2 = st.refs.length ? '<p class="t-refs">' + st.refs.map(function (r) { return esc(r.label) + ' <span class="ref">' + esc(r.ref) + "</span>"; }).join(" Â· ") + "</p>" : "";
+      var refs2 = st.refs.length ? '<p class="t-refs">' + st.refs.map(function (r) { return esc(r.label) + ' <span class="ref">' + esc(r.ref) + "</span>"; }).join(" · ") + "</p>" : "";
       if (!st.open) return '<li class="arc-step s-' + esc(st.status) + '"><div class="arc-head">' + head + "</div>" + (st.status === "todo" ? "" : note) + refs2 + "</li>";
       return '<li class="arc-step s-' + esc(st.status) + ' now"><details open><summary class="arc-head">' + head + "</summary>" + note + stageBody(it, st) + "</details></li>";
     }).join("") + "</ol>";
@@ -3698,13 +3698,13 @@ SOFTWARE.
     var past = cards.filter(function (c) { return live.indexOf(c) < 0; });
     var c = it.check, scored = c && c.score !== null && c.score !== undefined;
     var judg = c && (c.narration || []).filter(function (l) { return l.key === "judg"; })[0];
-    var ask = it.decision ? '<article class="appr q"><p class="label">Question Â· Needs you</p>' + decisionBlock(it) + "</article>" : "";
+    var ask = it.decision ? '<article class="appr q"><p class="label">Question · Needs you</p>' + decisionBlock(it) + "</article>" : "";
     var ap = dash.approvals;
-    return '<p class="label">Venture Â· as of ' + esc(when2(dash.as_of)) + "</p>" +
+    return '<p class="label">Venture · as of ' + esc(when2(dash.as_of)) + "</p>" +
       "<h1 class=\"venture-name\">" + esc(cleanText(it.title, 140)) + "</h1>" +
       '<p class="verdict-line">' + mark(it.stages.ended ? "killed" : it.proof.tone) + esc(c ? c.verdict : it.proof.headline) + "</p>" +
       (scored ? '<p class="score"><span class="score-n">' + esc(c.score) + '</span><span class="score-of"> out of 100</span> <span class="score-conf">Confidence ' + esc(c.conf) + " out of 100</span></p>" +
-        '<p class="muted small basis">' + esc(judg ? judg.text : "Part of this is the studioâs own opinion, not data.") + (typeof c.low === "number" && typeof c.high === "number" ? " Likely range " + esc(c.low) + " to " + esc(c.high) + "." : "") + "</p>" : "") +
+        '<p class="muted small basis">' + esc(judg ? judg.text : "Part of this is the studio’s own opinion, not data.") + (typeof c.low === "number" && typeof c.high === "number" ? " Likely range " + esc(c.low) + " to " + esc(c.high) + "." : "") + "</p>" : "") +
       (c && c.why ? '<p class="lead">' + esc(c.why) + "</p>" : "") +
       '<section class="livefeed" id="dash-feed" aria-label="Live feed">' + feedInner(it.id) + "</section>" +
       ((live.length || ask) ? '<h2>Needs you</h2>' + ask + live.map(apprCard).join("") : "") +
@@ -3720,11 +3720,11 @@ SOFTWARE.
     var it = dashItem(id || defaultVenture());
     if (!it) return '<p>That venture was not found. <a href="#dashboard">See all ventures</a>.</p>';
     var others = (dash.approvals.cards || []).filter(function (c) { return !dashItem(c.venture); });
-    return '<div class="dash"><details class="rail-wrap"' + (wideScreen() ? " open" : "") + "><summary>Ventures (" + state.items.length + ") Â· " + esc(cleanText(it.title, 40)) + "</summary>" +
-      '<nav class="rail" aria-label="Ventures"><p class="label">Ventures Â· ' + esc(when2(dash.as_of)) + "</p>" +
+    return '<div class="dash"><details class="rail-wrap"' + (wideScreen() ? " open" : "") + "><summary>Ventures (" + state.items.length + ") · " + esc(cleanText(it.title, 40)) + "</summary>" +
+      '<nav class="rail" aria-label="Ventures"><p class="label">Ventures · ' + esc(when2(dash.as_of)) + "</p>" +
       state.items.map(function (y) { return railRow(y, y.id === it.id); }).join("") + "</nav></details>" +
       '<div class="main-col">' + dashMain(it) +
-      (others.length ? '<h2>Other requests waiting</h2><p class="muted small">These belong to work the appâs referee does not hold.</p>' + others.filter(function (c) { return c.state === "waiting" || c.state === "stale"; }).map(apprCard).join("") : "") +
+      (others.length ? '<h2>Other requests waiting</h2><p class="muted small">These belong to work the app’s referee does not hold.</p>' + others.filter(function (c) { return c.state === "waiting" || c.state === "stale"; }).map(apprCard).join("") : "") +
       "</div></div>";
   };
 
@@ -3784,7 +3784,7 @@ SOFTWARE.
   }
   function verdictOrWho(item) {
     var c = item.check;
-    if (c) return c.score !== null && c.score !== undefined ? "<b>" + esc(c.score) + "</b>/100 Â· " + esc(c.verdict) : esc(c.verdict);
+    if (c) return c.score !== null && c.score !== undefined ? "<b>" + esc(c.score) + "</b>/100 · " + esc(c.verdict) : esc(c.verdict);
     if (item.terminal) return esc(item.terminal.label);
     if (item.killed) return "Stopped by " + esc(item.killed.by);
     return item.owner_now ? "<b>" + esc(item.owner_now) + "</b> has it" : esc(item.state.label);
@@ -3845,7 +3845,7 @@ SOFTWARE.
     else {
       html = '<a href="' + esc(l.href) + '"><span class="ll-label">Latest:</span> ' +
         (l.refused ? '<span class="g g-blocked" aria-hidden="true"></span><b>Blocked:</b> ' : "") +
-        esc(l.who) + ": " + esc(l.what) + " Â· " + esc(l.title) + ' Â· <time class="mono" datetime="' + esc(l.at) + '">' + esc(when(l.at)) + "</time>" +
+        esc(l.who) + ": " + esc(l.what) + " · " + esc(l.title) + ' · <time class="mono" datetime="' + esc(l.at) + '">' + esc(when(l.at)) + "</time>" +
         ' <span class="ref mono">' + esc(l.ref) + "</span></a>";
     }
     if (html !== ledgerShown) { el.innerHTML = html; ledgerShown = html; }
@@ -3927,7 +3927,7 @@ SOFTWARE.
     ledgerLine();
     onlineLine();
     onePrimary(route().name);
-    document.title = ($("#view h1") ? $("#view h1").textContent + " Â· " : "") + "Studio referee";
+    document.title = ($("#view h1") ? $("#view h1").textContent + " · " : "") + "Studio referee";
   }
 
   // Spend is read again with every refresh, so the status bar follows the approvals source on every screen.
@@ -3956,7 +3956,7 @@ SOFTWARE.
     }
     if (starting) return;
     starting = true;
-    if (go) { go.disabled = true; go.textContent = "Startingâ¦"; }
+    if (go) { go.disabled = true; go.textContent = "Starting…"; }
     function failed(res) {
       starting = false;
       if (go) { go.disabled = false; go.textContent = "Start"; }
@@ -4171,7 +4171,7 @@ SOFTWARE.
       });
     } else if (b.dataset.launch && api.launch) {
       b.disabled = true;
-      b.textContent = "Launchingâ¦";
+      b.textContent = "Launching…";
       api.launch(b.dataset.launch).then(function (res) {
         if (res.status !== "LIVE" && res.status !== "SAME") {
           b.disabled = false;
