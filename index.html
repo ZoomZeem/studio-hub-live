@@ -442,6 +442,11 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
 /* "Keep this idea" and the alpha line (hosted build only, slice A2). Logical properties, so a right-to-left page needs no rewrite. */
 .alpha-line { margin-block: var(--s3) var(--s2); margin-inline: 0; font-size: .875rem; color: var(--muted); }
 .alpha-line.resting { color: var(--text); background: var(--killed-bg); border-radius: var(--radius-sm); padding-block: var(--s2); padding-inline: var(--s3); }
+.who-line { margin-block: 0 var(--s2); margin-inline: 0; font-size: .875rem; color: var(--muted); }
+.kept-list { list-style: none; margin: 0; padding: 0; }
+.kept-item { padding-block: var(--s3); border-block-end: 1px solid var(--line); }
+.kept-item .keep-acts { margin-block-end: 0; }
+.kept-idea { margin-block: 0 var(--s1); margin-inline: 0; overflow-wrap: anywhere; }
 .keep { margin-block-start: var(--s4); padding-block-start: var(--s4); border-block-start: 1px solid var(--line); }
 .keep .h3 { margin-block-start: 0; }
 .keep-acts { display: flex; flex-wrap: wrap; gap: var(--s2); margin-block: var(--s3); margin-inline: 0; }
@@ -2594,7 +2599,7 @@ SOFTWARE.
 (function (root) {
   "use strict";
 
-  var ALPHA = "Alpha: a working surface of the ZoomZeem studio. Things may change or stop.";
+  var ALPHA = "Beta: a working surface of the ZoomZeem studio. Things may change or stop.";
   var RESTING = "The studio is resting. Nothing you kept is lost.";
   var UNREACHABLE = "Saving is not reachable right now. Your check still works.";
   var PAUSED = "Keeping is paused while the studio rests. Your check still works.";   // the alpha line already says "Resting"
@@ -2614,12 +2619,19 @@ SOFTWARE.
   var JOIN_PRIVACY = "What we keep: your GitHub name and number, when you joined and last signed in, and the ideas you choose to keep. " +
     "If the beta is full and you join the waiting list, we keep your GitHub name, number and the time you asked, for up to 30 days, only to hold your place. " +
     "GitHub shares only your public profile, and we never see your GitHub password. We do not ask for your email and we do not email you: come back to this page to see your place. " +
-    "We do not sell data or use your ideas to train models. You can leave the list, or delete your account, on this page at any time, and it is removed at once.";
+    "We do not sell data or use your ideas to train models. You can leave the list, or delete your account, on this page at any time; it is removed from our database at once, and from backups when those expire.";
   var JOIN_OFF_HERE = "Joining the beta happens on the hosted Hub. This copy does not connect to anything, so there is nothing to join from here.";
+  // The account page (#account) and the signed-in line. Fixed wording; the only outside text is a GitHub login and the
+  // sentences the person kept, both escaped.
+  var ACCOUNT_OFF_HERE = "Your account is on the hosted Hub. This copy does not connect to anything, so there is no account here.";
+  var ACCOUNT_EMPTY = "Nothing kept yet. Check an idea, then tap Keep this idea, and it will be here.";
+  var ACCOUNT_LIST_FAILED = "Your kept ideas could not be loaded right now. Your account is fine. Try again in a minute.";
+  var SIGNED_OUT_ALL = "Signed out on every device.";
   var PENDING_KEY = "zz_pending_keep";
   var PENDING_MAX_MS = 60 * 60 * 1000;
   var RETURN = "/#kept";
   var JOIN_RETURN = "/#join";
+  var ACCOUNT_RETURN = "/#account";
   var IDEA_MAX_BYTES = 1000;
 
   function esc(s) {
@@ -2656,6 +2668,66 @@ SOFTWARE.
 
   function places(b) {
     return b.members + " of " + b.cap + " places taken" + (b.waiting ? ", " + b.waiting + " waiting" : "") + ".";
+  }
+
+  /** The waiting-list part of GET /api/me for a signed-out person: a place and whether it is their turn, or null. */
+  function readWaiting(res) {
+    var w = res && res.status === 200 && res.body && res.body.signed_in === false ? res.body.waiting : null;
+    return w && typeof w.position === "number" && typeof w.ready === "boolean" ? { position: w.position, ready: w.ready } : null;
+  }
+
+  /** The line under the alpha line on every page: who is signed in, or where a waiting person stands. Empty otherwise. */
+  function whoLine(me, waiting) {
+    if (me && me.signed_in) {
+      return '<p class="who-line">Signed in as <b>' + esc(me.login) + '</b> · <a href="#account">Your account</a></p>';
+    }
+    if (waiting && waiting.ready) return '<p class="who-line" role="status"><b>A place is open for you.</b> <a href="#join">Take it</a></p>';
+    if (waiting) return '<p class="who-line">You are number ' + esc(waiting.position) + ' on the beta waiting list · <a href="#join">See your place</a></p>';
+    return "";
+  }
+
+  function dayOf(ms) { return typeof ms === "number" && isFinite(ms) ? new Date(ms).toISOString().slice(0, 10) : ""; }
+
+  /** The account page's state from the facts. ideas is the list the backend sent, or null when it could not be loaded. */
+  function accountView(s) {
+    if (!s || !s.mode || s.mode.kind !== "open") return { kind: "off", text: s && s.mode && s.mode.kind === "resting" ? PAUSED : UNREACHABLE };
+    var me = s.me && s.me.signed_in ? s.me : null;
+    if (!me) return { kind: "signed_out" };
+    return { kind: s.askDelete ? "ask_delete" : "member", login: me.login, since: me.since, ideas: Array.isArray(s.ideas) ? s.ideas : null, note: s.note || "" };
+  }
+
+  function keptItem(x) {
+    var run = x && x.run && typeof x.run === "object" ? x.run : {};
+    return '<li class="kept-item"><p class="kept-idea">' + esc(x.idea) + "</p>" +
+      '<p class="muted small">' + (run.verdict ? esc(run.verdict) + " · " : "") + "kept " + esc(dayOf(x.created_at)) + "</p>" +
+      '<div class="keep-acts"><button type="button" class="btn" data-acct-recheck="' + esc(x.id) + '">Check again</button>' +
+      '<button type="button" class="btn ghost" data-acct-remove="' + esc(x.id) + '">Remove</button></div></li>';
+  }
+
+  /** The account page as HTML. One primary action in every state. */
+  function accountHtml(v) {
+    var head = '<section class="account-page"><h1>Your account</h1>';
+    if (v.kind === "off") return head + "<p>" + esc(v.text) + "</p></section>";
+    if (v.kind === "signed_out") {
+      return head + "<p>You are not signed in.</p>" +
+        '<div class="keep-acts"><button type="button" class="btn primary" data-acct-signin="1">Continue with GitHub</button></div>' +
+        '<p class="muted small">Not a member yet? <a href="#join">Join the beta</a>.</p></section>';
+    }
+    if (v.kind === "ask_delete") {
+      return head + '<div class="keep ask"><p><b>Delete your account?</b> ' + esc(DELETE_WHAT) + '</p><p class="small">' + esc(DELETE_LEFT) + "</p>" +
+        '<div class="keep-acts"><button type="button" class="btn danger" data-keep-delete="1">Delete for good</button>' +
+        '<button type="button" class="btn ghost" data-keep-delete-back="1">Keep my account</button></div></div></section>';
+    }
+    var since = dayOf(v.since);
+    var list = v.ideas === null ? '<p class="keep-note" role="status">' + esc(ACCOUNT_LIST_FAILED) + "</p>"
+      : v.ideas.length ? '<ul class="kept-list">' + v.ideas.map(keptItem).join("") + "</ul>" : "<p>" + esc(ACCOUNT_EMPTY) + "</p>";
+    return head + "<p>Signed in with GitHub as <b>" + esc(v.login) + "</b>" + (since ? ". Member since " + esc(since) : "") + ".</p>" +
+      (v.note ? '<p class="keep-note" role="status">' + esc(v.note) + "</p>" : "") +
+      '<h2 class="h3">Ideas you kept</h2>' + list +
+      '<p><a class="btn primary" href="#today">Check an idea</a></p>' +
+      '<div class="keep-acts"><button type="button" class="btn ghost" data-keep-signout="1">Sign out</button>' +
+      '<button type="button" class="btn ghost" data-acct-signout-all="1">Sign out on every device</button></div>' +
+      '<p class="muted small"><button type="button" class="btn link" data-keep-delete-ask="1">Delete me and my ideas</button></p></section>';
   }
 
   /** The join page as HTML. At most one primary action in every state. */
@@ -2798,6 +2870,10 @@ SOFTWARE.
       unlink: function (id) { return call("DELETE", "/api/links/" + encodeURIComponent(id)); },
       signout: function () { return call("POST", "/api/signout", {}); },
       deleteMe: function () { return call("POST", "/api/me/delete", {}); },
+      ideas: function () { return call("GET", "/api/ideas"); },
+      removeIdea: function (id) { return call("DELETE", "/api/ideas/" + encodeURIComponent(id)); },
+      signoutAll: function () { return call("POST", "/api/signout/all", {}); },
+      accountSignInUrl: function () { return base + "/auth/github/start?return=" + encodeURIComponent(ACCOUNT_RETURN); },
       beta: function () { return call("GET", "/api/beta"); },
       leave: function () { return call("POST", "/api/beta/leave", {}); },
       joinUrl: function () { return base + "/auth/github/start?intent=join&return=" + encodeURIComponent(JOIN_RETURN); },
@@ -2833,7 +2909,7 @@ SOFTWARE.
     return res && res.status === 0 ? UNREACHABLE : "Not kept. Try again in a minute.";
   }
 
-  var api = { JOIN_OFF_HERE: JOIN_OFF_HERE, JOIN_PRIVACY: JOIN_PRIVACY, JOIN_RETURN: JOIN_RETURN, readBeta: readBeta, joinView: joinView, joinHtml: joinHtml, BADGE: BADGE, PRIVACY: PRIVACY, DELETE_WHAT: DELETE_WHAT, DELETE_LEFT: DELETE_LEFT, DELETED: DELETED, ALPHA: ALPHA, RESTING: RESTING, UNREACHABLE: UNREACHABLE, PAUSED: PAUSED, RETURN: RETURN, PENDING_KEY: PENDING_KEY,
+  var api = { ACCOUNT_OFF_HERE: ACCOUNT_OFF_HERE, SIGNED_OUT_ALL: SIGNED_OUT_ALL, ACCOUNT_RETURN: ACCOUNT_RETURN, readWaiting: readWaiting, whoLine: whoLine, accountView: accountView, accountHtml: accountHtml, JOIN_OFF_HERE: JOIN_OFF_HERE, JOIN_PRIVACY: JOIN_PRIVACY, JOIN_RETURN: JOIN_RETURN, readBeta: readBeta, joinView: joinView, joinHtml: joinHtml, BADGE: BADGE, PRIVACY: PRIVACY, DELETE_WHAT: DELETE_WHAT, DELETE_LEFT: DELETE_LEFT, DELETED: DELETED, ALPHA: ALPHA, RESTING: RESTING, UNREACHABLE: UNREACHABLE, PAUSED: PAUSED, RETURN: RETURN, PENDING_KEY: PENDING_KEY,
               readMode: readMode, banner: banner, linkId: linkId, linkHtml: linkHtml, payload: payload, view: view, html: html, client: client, pending: pending, refusal: refusal };
   root.HubKeep = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -2929,7 +3005,7 @@ SOFTWARE.
   // ---- "Keep this idea" (alpha slice A2). Only the hosted build sets window.STUDIO_CLOUD; every other build skips this.
   var K = window.STUDIO_CLOUD && window.HubKeep ? window.HubKeep : null;
   var cloud = K ? K.client(String(window.STUDIO_CLOUD.base || ""), null) : null;
-  var keep = { mode: { kind: "unreachable" }, beta: null, joinNote: "", me: null, kept: {}, link: {}, note: {}, askDelete: false, linkIdea: null };
+  var keep = { mode: { kind: "unreachable" }, beta: null, joinNote: "", waiting: null, ideas: null, acctNote: "", me: null, kept: {}, link: {}, note: {}, askDelete: false, linkIdea: null };
   function storage() { try { return window.localStorage; } catch (e) { return null; } }
   function itemById(id) { return state && state.items.filter(function (v) { return v.id === id; })[0]; }
   function keepArea(item) {
@@ -2946,7 +3022,24 @@ SOFTWARE.
     if (!K) return '<section class="join"><h1>Join the beta</h1><p>Joining the beta happens on the hosted Hub. This copy does not connect to anything, so there is nothing to join from here.</p></section>';
     return K.joinHtml(K.joinView({ mode: keep.mode, beta: keep.beta, note: keep.joinNote }));
   }
-  function paintBanner() { var el = $("#alpha-line"); if (el) el.innerHTML = K.banner(keep.mode); }
+  // The account page (#account): the kept ideas come from the backend on every visit, so a second device sees the same list.
+  function accountLoad() {
+    // Who is signed in is what the page learned at load (and what sign-in, sign-out and delete have changed since), so
+    // this makes no second /api/me call. A session that ended elsewhere shows up as a 401 on the list.
+    if (!K || keep.mode.kind !== "open" || !keep.me) { keep.ideas = null; return Promise.resolve(); }
+    return cloud.ideas().then(function (res) {
+      if (res.status === 401) keep.me = null;
+      keep.ideas = res.status === 200 && res.body && Array.isArray(res.body.ideas) ? res.body.ideas : null;
+    });
+  }
+  function accountPage() {
+    if (!K) return '<section class="account-page"><h1>Your account</h1><p>' + esc(window.HubKeep ? window.HubKeep.ACCOUNT_OFF_HERE : "Your account is on the hosted Hub. This copy does not connect to anything, so there is no account here.") + "</p></section>";
+    return K.accountHtml(K.accountView({ mode: keep.mode, me: keep.me, ideas: keep.ideas, askDelete: keep.askDelete, note: keep.acctNote }));
+  }
+  function paintBanner() {
+    var el = $("#alpha-line");
+    if (el) el.innerHTML = K.banner(keep.mode) + (keep.mode.kind === "open" ? K.whoLine(keep.me, keep.waiting) : "");
+  }
   function keepSave(item) {
     return cloud.keep([K.payload(item)]).then(function (res) {
       if (res.status === 201) { keep.kept[item.id] = true; keep.note[item.id] = ""; return; }
@@ -2967,7 +3060,11 @@ SOFTWARE.
       keep.mode = K.readMode(res.status, res.body);
       paintBanner();
       if (keep.mode.kind !== "open") return null;
-      return cloud.me().then(function (m) { keep.me = m.status === 200 && m.body && m.body.signed_in ? m.body : null; });
+      return cloud.me().then(function (m) {
+        keep.me = m.status === 200 && m.body && m.body.signed_in ? m.body : null;
+        keep.waiting = keep.me ? null : K.readWaiting(m);
+        paintBanner();
+      });
     }).then(function () {
       // A private link (/k/<id>) opens its kept idea; the hosted site serves this same page for that path (A3).
       var lid = location.hash ? null : K.linkId(location.pathname);
@@ -3613,7 +3710,8 @@ SOFTWARE.
         "<h2>What happened</h2>" + timeline(hist, { oneIdea: true });
     },
     record: function () {
-      var list = state.audit;
+      var list = state.audit, filters = recordFilters();
+      if (filters.indexOf(recordFilter) < 0) recordFilter = "all";       // a filter with nothing left to show falls back
       if (recordFilter === "blocked") list = list.filter(function (a) { return a.status === "REFUSED"; });
       if (recordFilter === "mine") list = null;
       var mine = state.owner_log;
@@ -3624,11 +3722,9 @@ SOFTWARE.
         '<h2 id="decided-title">Decided</h2>' + decidedList(window.HubPresence.decisions(state) || []) +
         "<h2>Every step</h2>" +
         '<p class="muted small">Grouped by idea, newest first. Every attempt is here, including the ones the referee refused.</p>' +
-        '<div class="filters" role="group" aria-label="Show">' +
-        ["all|Everything", "blocked|Blocked only", "mine|Your decisions"].map(function (f) {
-          var p = f.split("|");
-          return '<button class="btn" data-filter="' + p[0] + '" aria-pressed="' + (recordFilter === p[0]) + '">' + p[1] + "</button>";
-        }).join("") + "</div>" +
+        (filters.length > 1 ? '<div class="filters" role="group" aria-label="Show">' + filters.map(function (f) {
+          return '<button class="btn" data-filter="' + f + '" aria-pressed="' + (recordFilter === f) + '">' + FILTER_WORDS[f] + "</button>";
+        }).join("") + "</div>" : "") +
         (list ? timeline(list, { byIdea: true }) : ownerLog(mine));
     },
     replays: function (data) {
@@ -3763,6 +3859,17 @@ SOFTWARE.
         '<span class="lr-res">' + esc(res) + "</span>" +
         '<span class="lr-who">' + (d.who === "You" ? "You" : "By " + esc(d.who)) + " · " + esc(when(d.at)) + ref + "</span></div></li>";
     }).join("") + "</ol>";
+  }
+
+  // The Record's filters (UX recon rule 3: reveal a panel once it has content). "Blocked only" appears once the referee
+  // has refused a step, "Your decisions" once the owner has decided something; with only "Everything" left there is no
+  // filter row at all. Read from the state the page already holds.
+  var FILTER_WORDS = { all: "Everything", blocked: "Blocked only", mine: "Your decisions" };
+  function recordFilters() {
+    var out = ["all"];
+    if (state.audit.some(function (a) { return a.status === "REFUSED"; })) out.push("blocked");
+    if (state.owner_log.length) out.push("mine");
+    return out;
   }
   function ownerLog(list) {
     if (!list.length) return '<p class="muted">You have not made any decisions yet.</p>';
@@ -4155,6 +4262,7 @@ SOFTWARE.
       spend = dash.approvals;
       setView(views.dashboard(r.arg)); after();
     });
+    if (r.name === "account") return accountLoad().then(function () { setView(accountPage()); keep.acctNote = ""; after(); if (keep.askDelete && $("[data-keep-delete]")) $("[data-keep-delete]").focus(); });
     if (r.name === "join") return joinLoad().then(function () { setView(joinPage()); keep.joinNote = ""; after(); });
     if (r.name === "today" || !views[r.name]) return api.dashboard().then(function (d) {
       var nd = normDash(d);
@@ -4171,6 +4279,7 @@ SOFTWARE.
 
   function after() {
     $("#loading").hidden = true;
+    if (K) paintBanner();                  // who is signed in changes with sign-in, sign-out and delete
     statusBar();
     pauseBar();
     refMark();
@@ -4270,8 +4379,27 @@ SOFTWARE.
       var done = function () { toast("Link copied."); };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(input.value).then(done, function () { input.select(); });
       else input.select();
+    } else if (d.acctSignin) {
+      location.href = cloud.accountSignInUrl();
+    } else if (d.acctSignoutAll) {
+      b.disabled = true;
+      cloud.signoutAll().then(function (res) {
+        if (res.status === 200 || res.status === 401) { keep.me = null; keep.kept = {}; keep.ideas = null; }
+        render();
+        toast(res.status === 200 ? K.SIGNED_OUT_ALL : K.refusal(res));
+      });
+    } else if (d.acctRemove) {
+      b.disabled = true;
+      cloud.removeIdea(d.acctRemove).then(function (res) {
+        if (res.status !== 200 && res.status !== 404) keep.acctNote = K.refusal(res);
+        render();
+        if (res.status === 200) toast("Removed.");
+      });
+    } else if (d.acctRecheck) {
+      var found = (keep.ideas || []).filter(function (x) { return x.id === d.acctRecheck; })[0];
+      if (found) startIdea(found.idea);
     } else if (d.keepSignout) {
-      cloud.signout().then(function () { keep.me = null; keep.kept = {}; render(); toast("Signed out."); });
+      cloud.signout().then(function () { keep.me = null; keep.kept = {}; keep.ideas = null; render(); toast("Signed out."); });
     } else if (d.keepDeleteAsk) {
       keep.askDelete = true; render();
       if ($("[data-keep-delete]")) $("[data-keep-delete]").focus();
@@ -4281,7 +4409,7 @@ SOFTWARE.
       b.disabled = true;
       cloud.deleteMe().then(function (res) {
         keep.askDelete = false;
-        if (res.status === 200) { keep.me = null; keep.kept = {}; }
+        if (res.status === 200) { keep.me = null; keep.kept = {}; keep.ideas = null; }
         render();
         toast(res.status === 200 ? K.DELETED : K.refusal(res));
       });
