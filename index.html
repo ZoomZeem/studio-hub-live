@@ -3199,6 +3199,9 @@ SOFTWARE.
     var keepLog = staticState.owner_log.filter(function (e) { return e.suggestion; });
     staticState = swapIdea(clone(b.state));
     keepDecisions(keepLog);
+    // The new idea takes the first-run card's id, so what was kept for the last idea under that id is not this idea's:
+    // without this, a second idea showed "Kept under a private link" with the first idea's link (found by test_customer_path).
+    staticState.items.forEach(function (it) { if (it.first_run) { delete keep.kept[it.id]; delete keep.link[it.id]; delete keep.note[it.id]; } });
     // The steps were played by the real referee ahead of time; the CHECKS run here, now, on your sentence.
     staticState.items.forEach(function (it) { if (it.first_run) it.check = toCheck(t); });
     return b.result;
