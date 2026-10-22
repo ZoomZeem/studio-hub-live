@@ -172,6 +172,9 @@ p { margin: var(--s2) 0; }
 .sug { border: 1px solid var(--line-soft); border-radius: var(--radius-sm); padding: var(--s3); background: var(--bg); }
 .sug .what { font-weight: 650; }
 .sug .why { color: var(--muted); font-size: .9rem; margin-top: 2px; }
+.cost-line { margin: 0 0 var(--s2); font-size: var(--t13); color: var(--muted); }
+.cost-line b, .cost-tag b { color: var(--text); font-weight: 600; }
+.cost-tag { font-family: var(--mono); font-size: var(--t12); color: var(--muted); }
 .sug .acts { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); align-items: center; }
 .decided { font-size: .9rem; font-weight: 650; }
 .decided.approved { color: var(--good); }
@@ -1737,7 +1740,29 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
       lines.push("line." + l.ref);
     });
     var gaps = (src.gaps || []).filter(function (g, i, a) { return GAPS[g] && a.indexOf(g) === i; });
+    var n = src.next;
+    if (n && typeof n.item === "string" && n.item && typeof n.title === "string" && typeof n.who === "string" && typeof n.label === "string") {
+      facts["next.step"] = { value: { item: n.item, title: n.title.slice(0, LINE_TEXT), who: n.who.slice(0, LINE_TEXT), label: n.label.slice(0, LINE_TEXT) },
+                             receipt: "state.items/" + n.item };
+    }
     return { schema: "studio.layout-facts/1", facts: facts, lines: lines, gaps: gaps };
+  }
+
+  // What happens next when nothing needs the person (UX recon, rule 9): the open idea an agent is working on that changed
+  // last on the record (RUNNING, OFFERED or VERIFYING, with someone holding it), in the record's own words. null when nothing
+  // is being worked on; nothing is predicted beyond what the record says is under way.
+  var WORKING = ["RUNNING", "OFFERED", "VERIFYING"];
+  function nextStep(items) {
+    var best = null;
+    (Array.isArray(items) ? items : []).forEach(function (i) {
+      if (!i || !i.state || WORKING.indexOf(i.state.code) < 0 || typeof i.owner_now !== "string" || !i.owner_now || typeof i.id !== "string") return;
+      var t = typeof i.updated_at === "string" ? Date.parse(i.updated_at) : NaN;
+      if (isNaN(t)) return;
+      if (!best || t > best.t || (t === best.t && i.id < best.item)) {
+        best = { t: t, item: i.id, title: String(i.title || i.id), who: i.owner_now, label: String(i.state.label || i.state.code) };
+      }
+    });
+    return best ? { item: best.item, title: best.title, who: best.who, label: best.label } : null;
   }
 
   function ref(id) { return { $fact: id }; }
@@ -1846,9 +1871,13 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
         (p.go ? '<p class="plan-go"><button type="button" class="btn' + (p.primary ? " primary" : "") + '" data-plan-go="1">Go</button></p>' : "") +
         "</section>";
     },
-    empty_state: function () {
+    empty_state: function (p, pack) {
+      var nx = pack && pack.facts && pack.facts["next.step"] ? pack.facts["next.step"].value : null;
       return '<div class="empty"><p class="empty-mark" aria-hidden="true">✓</p><p class="empty-head">All clear.</p>' +
         "<p>Nothing needs you right now. The agents carry on, and the referee will flag anything only you can decide.</p>" +
+        // Rule 9: say what happens next, from the record. With nothing under way, say that; never guess.
+        (nx ? '<p class="empty-next"><b>Next:</b> ' + esc(nx.who) + ' has <a href="#idea/' + encodeURIComponent(nx.item) + '">' + esc(nx.title) + "</a> (" + esc(nx.label) + ").</p>"
+            : '<p class="empty-next"><b>Next:</b> nothing is under way. Describe an idea above to start one.</p>') +
         '<p><a class="btn" href="#ideas">See what the agents are doing</a></p></div>';
     }
   };
@@ -2069,7 +2098,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return { kind: kind, word: MARKS[kind].word, glyph: MARKS[kind].glyph, href: MARKS[kind].href, why: MARKS[kind].why };
   }
 
-  var api = { ledgerLine: ledgerLine, refereeMark: refereeMark, MARKS: MARKS, receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
+  var api = { nextStep: nextStep, ledgerLine: ledgerLine, refereeMark: refereeMark, MARKS: MARKS, receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
               templatePlan: templatePlan, render: render, choose: choose, drawBlock: drawBlock, ordered: ordered, slotOf: slotOf,
               planFromParts: planFromParts, block: block, planOf: planOf, PLAN_STEPS: PLAN_STEPS,
               tools: tools, canonical: canonical, sha256: sha256,
@@ -2922,7 +2951,7 @@ SOFTWARE.
         })) + "</div></details>" : "";
       return '<li class="sug" data-sug="' + esc(s.id) + '"><div class="what">' + esc(main) + "</div>" +
         (hoisted ? "" : '<div class="why">Why: ' + esc(s.because) + "</div>") + receipt +
-        '<div class="acts">' + (s.decision ? decided : buttons) + "</div></li>";
+        '<div class="acts">' + (s.decision ? decided : buttons + COST_SUGGESTION) + "</div></li>";
     }).join("") + "</ul>";
   }
 
@@ -2939,13 +2968,19 @@ SOFTWARE.
 
   suggestionList.count = function (item) { return item.suggestions.filter(function (s) { return FLAG_KINDS.indexOf(s.kind) >= 0; }).length; };
 
+  // Cost on every action (docs/research/agent-ux-recon-2026-10-20.md, "The ten rules", rule 7). Both lines are facts of this app, not of a card: a
+  // suggestion's Approve and Reject only record the choice (engine.decide: "Nothing is executed, ever"), and an answer is recorded on the idea and sent
+  // nowhere; the app has no paid step and no outside effect to charge for.
+  var COST_ANSWER = '<b class="mono">Free.</b> Your choice is recorded on the idea; nothing is charged or sent.';
+  var COST_SUGGESTION = '<span class="cost-tag"><b class="mono">Free</b> · records your answer only</span>';
+
   function decisionBlock(item) {
     var d = item.decision;
     if (!d) return "";
     return '<p class="question">' + esc(d.question) + '</p><div class="options">' + d.options.map(function (o) {
       return '<button class="btn option" data-answer="' + esc(o) + '" data-item="' + esc(item.id) + '">' + esc(o) +
         (o === d.recommendation ? '<span class="rec">Recommended</span>' : "") + "</button>";
-    }).join("") + '</div><p class="muted small">' + esc(d.no_answer) + " " + esc(d.continuing.join(". ")) + ".</p>";
+    }).join("") + '</div><p class="cost-line">' + COST_ANSWER + '</p><p class="muted small">' + esc(d.no_answer) + " " + esc(d.continuing.join(". ")) + ".</p>";
   }
 
   // ---------------- proof: one line under every verdict, expanding to the trail ----------------
@@ -3208,7 +3243,7 @@ SOFTWARE.
       }
       // Home is laid out by the presence registry (app/web/presence.js, docs/design/DYNAMIC-PRESENCE.md): the facts are
       // computed here, the plan chooses the blocks, and this page draws only the two blocks that reuse its parts.
-      var pack = P.factPack({ counts: { ideas: state.counts.items, needs: need.length, blocked: state.counts.blocked, stopped: state.counts.kills },
+      var pack = P.factPack({ counts: { ideas: state.counts.items, needs: need.length, blocked: state.counts.blocked, stopped: state.counts.kills }, next: P.nextStep(state.items),
                               lines: dash ? dash.feed : [], gaps: dashGap ? ["dashboard"] : (dash && dash.feed_errors) || [] });
       var components = {
         idea_box: function (p) { return startBox(p.primary); },
@@ -4032,7 +4067,7 @@ SOFTWARE.
     } else if (b.dataset.redo) {
       var li = b.closest(".sug");
       $(".acts", li).innerHTML = '<button class="btn' + (li.closest(".needs-list") ? "" : " primary") + '" data-decide="approve" data-sid="' + esc(b.dataset.redo) + '">Approve</button>' +
-        '<button class="btn" data-decide="reject" data-sid="' + esc(b.dataset.redo) + '">Reject</button>';
+        '<button class="btn" data-decide="reject" data-sid="' + esc(b.dataset.redo) + '">Reject</button>' + COST_SUGGESTION;
       $(".acts button", li).focus();
     } else if (b.dataset.answer !== undefined && b.dataset.item) {
       $all("[data-answer]").forEach(function (x) { x.disabled = true; });
