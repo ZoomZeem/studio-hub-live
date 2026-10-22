@@ -2084,6 +2084,44 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
              ref: "R-" + (typeof last.seq === "number" ? last.seq : "?"), refused: last.status === "REFUSED",
              href: typeof last.item === "string" && last.item ? "#idea/" + encodeURIComponent(last.item) : "#record" };
   }
+  // The Record's top (UX recon of 20 Oct, rule 10: "Everything decided, and why. Newest first.", each stop its own entry).
+  // Three kinds of decision, each read from its own part of the record and never reworded beyond a fixed verb:
+  //   stop     an idea stopped: the engine's kills (how, who, when, the reason or "none on record", the evidence)
+  //   verdict  the independent check: an audit "verdict" entry (passed, failed or refused), its reason or proof line, R-<seq>
+  //   owner    the owner's own decisions (owner_log). An applied stop is already its kill, so it is not listed twice.
+  // Newest first by time, then by seq or the owner log's n. A stop has no seq (order 0), so at the same instant it comes after
+  // a numbered verdict, and two stops at the same instant keep the engine's order (Array.prototype.sort is stable).
+  // Garbage gives null; a part that is missing gives nothing.
+  var OWNER_VERBS = { approved: "You approved", rejected: "You rejected", answered: "You answered", stopped: "You stopped",
+                      paused: "You paused the studio", resumed: "You resumed the studio" };
+  function decisions(st) {
+    if (!st || typeof st !== "object") return null;
+    var str = function (v) { return typeof v === "string" ? v : ""; }, out = [];
+    var href = function (item) { return typeof item === "string" && item ? "#idea/" + encodeURIComponent(item) : ""; };
+    (Array.isArray(st.kills) ? st.kills : []).forEach(function (k) {
+      if (!k || typeof k !== "object") return;
+      out.push({ kind: "stop", at: str(k.at), order: 0, title: str(k.title), href: href(k.item), what: str(k.how),
+                 why: str(k.reason), who: str(k.by), ref: str(k.evidence) });
+    });
+    (Array.isArray(st.audit) ? st.audit : []).forEach(function (a) {
+      if (!a || typeof a !== "object" || a.event !== "verdict") return;
+      var proof = a.proof && typeof a.proof === "object" ? a.proof : {};
+      out.push({ kind: "verdict", at: str(a.at), order: typeof a.seq === "number" ? a.seq : 0, title: str(a.title), href: href(a.item),
+                 what: str(a.result), why: str(a.why) || str(proof.line), who: str(a.who), refused: a.status === "REFUSED",
+                 bad: a.status === "REFUSED" || a.tone === "bad",           // the engine's own tone, not the wording of its label
+                 ref: "R-" + (typeof a.seq === "number" ? a.seq : "?") });
+    });
+    (Array.isArray(st.owner_log) ? st.owner_log : []).forEach(function (e) {
+      if (!e || typeof e !== "object" || !OWNER_VERBS[e.action]) return;
+      if (e.action === "stopped" && e.result === "APPLIED") return;          // listed once, as the stop
+      out.push({ kind: "owner", at: str(e.at), order: typeof e.n === "number" ? e.n : 0, title: str(e.title), href: href(e.item),
+                 what: OWNER_VERBS[e.action], why: str(e.text), who: "You", ref: str(e.ref),
+                 refused: !!e.result && e.result !== "RECORDED" && e.result !== "APPLIED" });
+    });
+    return out.filter(function (d) { return !isNaN(Date.parse(d.at)); }).sort(function (x, y) {
+      return (Date.parse(y.at) - Date.parse(x.at)) || (y.order - x.order);
+    });
+  }
   function refereeMark(st) {
     var items, last, kind;
     if (!st || typeof st !== "object" || !Array.isArray(st.items)) return null;
@@ -2098,7 +2136,7 @@ h2.h3, h3.sub { font-size: var(--t15); margin: 20px 0 6px; }
     return { kind: kind, word: MARKS[kind].word, glyph: MARKS[kind].glyph, href: MARKS[kind].href, why: MARKS[kind].why };
   }
 
-  var api = { nextStep: nextStep, ledgerLine: ledgerLine, refereeMark: refereeMark, MARKS: MARKS, receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
+  var api = { nextStep: nextStep, ledgerLine: ledgerLine, decisions: decisions, refereeMark: refereeMark, MARKS: MARKS, receiptHtml: receiptHtml, stamp: stamp, CATALOG: CATALOG, STATE_WORDS: STATE_WORDS, MAX_BLOCKS: MAX_BLOCKS, validate: validate, factPack: factPack,
               templatePlan: templatePlan, render: render, choose: choose, drawBlock: drawBlock, ordered: ordered, slotOf: slotOf,
               planFromParts: planFromParts, block: block, planOf: planOf, PLAN_STEPS: PLAN_STEPS,
               tools: tools, canonical: canonical, sha256: sha256,
@@ -3096,6 +3134,19 @@ SOFTWARE.
   // Each example must get a scored verdict from the bank (app/tests/test_aha.py fails otherwise): a first tap that
   // ends in "Can't judge this one yet" is not a first answer.
   var EXAMPLES = ["Find duplicate photos on my phone", "Turn my bank statement into a monthly summary", "A chore chart with daily streaks for my kids"];
+  // The box's placeholder walks through more real examples than the chips (UX recon rule 6: one box with real examples).
+  // Each is a sentence the first check can judge, never a chip; with the chips they show every area the bank knows (tested).
+  var PLACEHOLDERS = ["text me when my bus is running late", "alert me when the gold price drops below a set level",
+                      "remind me to drink water and keep a daily streak", "find and delete blurry photos from my camera roll"];
+  var placeholderAt = 0;
+  // One quiet timer for the page. It moves on only while the box is on screen, empty and not in use, and never with
+  // reduced motion; a placeholder change is not announced, and the label stays the same.
+  setInterval(function () {
+    var box = document.getElementById("start-text");
+    if (!box || box.value || document.activeElement === box || document.hidden || reducedMotion()) return;
+    placeholderAt = (placeholderAt + 1) % PLACEHOLDERS.length;
+    box.placeholder = "For example: " + PLACEHOLDERS[placeholderAt];
+  }, 4000);
   function chips(label) {
     return '<div class="chips" role="group" aria-label="' + esc(label) + '">' + EXAMPLES.map(function (x) {
       return '<button type="button" class="chip" data-example="' + esc(x) + '">' + esc(x) + "</button>"; }).join("") + "</div>";
@@ -3116,7 +3167,7 @@ SOFTWARE.
       coversLine() +
       '<form id="start-form" class="start"><label class="sr" for="start-text">Your idea in one sentence</label>' +
       '<div class="field' + (voiceOn() ? " has-mic" : "") + '">' +
-      '<input id="start-text" type="text" maxlength="140" autocomplete="off" placeholder="For example: text me when my bus is running late">' +
+      '<input id="start-text" type="text" maxlength="140" autocomplete="off" placeholder="For example: ' + esc(PLACEHOLDERS[placeholderAt]) + '">' +
       micButton() + "</div>" +
       '<button class="btn' + (primary === false ? "" : " primary") + '" id="start-go">Start</button></form>' +
       (voiceOn() ? '<p class="mic-note" id="mic-note" hidden>Your browser may send your voice to its speech service. ' +
@@ -3305,14 +3356,11 @@ SOFTWARE.
       if (recordFilter === "blocked") list = list.filter(function (a) { return a.status === "REFUSED"; });
       if (recordFilter === "mine") list = null;
       var mine = state.owner_log;
+      // Recon rule 10: the record as a product surface. What was decided and why, newest first, each stop its own entry
+      // (presence.js decisions); the full step-by-step timeline stays below with its filters.
       return "<h1>The record</h1>" +
-        '<p class="lead">Why each idea was approved, blocked or killed. Every attempt is kept, including the ones the referee refused.</p>' +
-        "<h2>Stopped ideas</h2>" + (state.kills.length ? '<ul class="ledger">' + state.kills.map(function (k) {
-          return '<li class="kill"><div class="lr">' + glyph("stopped", "Stopped") + '<div class="lr-name">' + esc(k.title) +
-            '<p class="lr-sub">' + (k.reason ? "Reason: " + esc(k.reason) : "No reason text on record.") + "</p></div>" +
-            '<span class="lr-res">' + esc(k.how) + "</span>" +
-            '<span class="lr-who">By ' + esc(k.by) + " · " + esc(when(k.at)) + (k.evidence ? ' · evidence <span class="ref">' + esc(k.evidence) + "</span>" : "") + "</span></div></li>";
-        }).join("") + "</ul>" : '<p class="muted">No idea has been killed yet.</p>') +
+        '<p class="lead">Everything decided, and why. Newest first.</p>' +
+        '<h2 id="decided-title">Decided</h2>' + decidedList(window.HubPresence.decisions(state) || []) +
         "<h2>Every step</h2>" +
         '<p class="muted small">Grouped by idea, newest first. Every attempt is here, including the ones the referee refused.</p>' +
         '<div class="filters" role="group" aria-label="Show">' +
@@ -3437,6 +3485,24 @@ SOFTWARE.
     }).join("");
   }
 
+  // One row per decision: the stop, verdict or owner row keeps the Record's row shape (glyph, name, result, who), and the
+  // reason sits under the name. A stop is `li.kill`, as before. The idea's name opens the idea.
+  function decidedList(list) {
+    if (!list.length) return '<p class="muted">Nothing has been decided yet.</p>';
+    return '<ol class="ledger decided" aria-labelledby="decided-title">' + list.map(function (d) {
+      var g = d.kind === "stop" ? "stopped" : d.refused || d.bad ? "blocked" : "done";   // a refusal or a failed check is the referee doing its job, not a stop
+      var label = d.kind === "stop" ? "Stopped" : d.refused ? "Refused" : d.what;
+      var name = d.title ? (d.href ? '<a class="card-link" href="' + esc(d.href) + '">' + esc(d.title) + "</a>" : esc(d.title)) : "";
+      var why = d.kind === "stop" ? (d.why ? "Reason: " + esc(d.why) : "No reason text on record.")
+        : d.why ? (d.kind === "owner" ? esc(d.why) : "Why: " + esc(d.why)) : "No reason on record.";
+      var res = d.kind === "owner" ? d.what + (d.refused ? " (the referee refused this)" : "") : d.what;
+      var ref = d.ref ? ' · <span class="ref">' + esc(d.ref) + "</span>" : "";
+      return '<li class="' + (d.kind === "stop" ? "kill" : "decision d-" + esc(d.kind)) + '"><div class="lr">' + glyph(g, label) +
+        '<div class="lr-name">' + name + '<p class="lr-sub">' + why + "</p></div>" +
+        '<span class="lr-res">' + esc(res) + "</span>" +
+        '<span class="lr-who">' + (d.who === "You" ? "You" : "By " + esc(d.who)) + " · " + esc(when(d.at)) + ref + "</span></div></li>";
+    }).join("") + "</ol>";
+  }
   function ownerLog(list) {
     if (!list.length) return '<p class="muted">You have not made any decisions yet.</p>';
     return '<ol class="timeline ledger">' + list.map(function (e) {
